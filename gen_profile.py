@@ -1,18 +1,44 @@
-"""Generuje profil Loupedeck CT "Claude Code" dla Logi Plugin Service 6.x.
+"""Generates the Loupedeck CT "Claude Code" profile for Logi Plugin Service 6.x.
 
-Uzycie:
-  python gen_profile.py --os win --out <katalog_wyjsciowy> [--prompts prompts.txt] [--wheel-plugin]
+Usage:
+  python gen_profile.py --os win --out <dir> [--prompts prompts.txt] [--lang en|de|pl] [--wheel-plugin]
+                        [--target app|default]
 
-Tworzy w <out>:
-  app/ApplicationInfo.json + app/Profiles/<GUID>/ProfileInfo.json + ActionIcons/*.ict
-                                                                   (do skopiowania do Applications/Loupedeck20/)
-  claude-code-<os>.lp5                                             (do recznego importu)
-Wszystkie identyfikatory sa deterministyczne (uuid5), wiec ponowne uruchomienie nadpisuje ten sam profil.
---wheel-plugin: na kole maskotka-tamagotchi z wtyczki ClaudeMascot (musi byc zainstalowana).
---target default: zamiast osobnej aplikacji terminala profil dla domyslnej aplikacji systemu
-  (@_defaultwin / @_defaultmac), wynik w <out>/default/<GUID>/; instalator ustawia go jako domyslny.
+Writes to <out>:
+  app/ApplicationInfo.json + app/Profiles/<GUID>/{ProfileInfo.json, ActionIcons/*.ict}
+                                    -> copy to Applications/Loupedeck20/ (profile follows the terminal app)
+  default/<GUID>/                   -> with --target default: same layout for the system default app
+                                       (@_defaultwin / @_defaultmac); the installer makes it the default profile
+  claude-code-<os>.lp5              -> for a manual "Import profile" in the Loupedeck app
+All ids are deterministic (uuid5), so re-running overwrites the same profile.
+--wheel-plugin: the big wheel shows the ClaudeMascot tamagotchi (the plugin must be installed).
+--lang: tile captions; default = "lang" from ~/.config/loupedeck-cc/config.json, else "en".
 """
 import argparse, base64, json, os, sys, uuid, zipfile, datetime
+
+# Tile/dial captions. Claude Code commands keep their English names in every language.
+LABELS = {
+    "en": {"remote": "Remote", "new": "New\nsession", "continue": "Continue", "next": "Next", "back": "Back",
+           "tabs": "Tabs", "font": "Font", "font_reset": "Font reset", "session": "Session {n}", "space": "Space",
+           "save": "Save\nwip", "up": "Up", "left": "Left", "down": "Down", "right": "Right",
+           "clear_line": "Clear\nline", "page1": "Claude Code", "page2": "Prompts"},
+    "de": {"remote": "Remote", "new": "Neue\nSitzung", "continue": "Fortsetzen", "next": "Weiter", "back": "Zurück",
+           "tabs": "Tabs", "font": "Schrift", "font_reset": "Schrift reset", "session": "Sitzung {n}",
+           "space": "Leertaste", "save": "Save\nwip", "up": "Hoch", "left": "Links", "down": "Runter",
+           "right": "Rechts", "clear_line": "Zeile\nlöschen", "page1": "Claude Code", "page2": "Prompts"},
+    "pl": {"remote": "Remote", "new": "Nowa\nsesja", "continue": "Kontynuuj", "next": "Dalej", "back": "Wstecz",
+           "tabs": "Zakładki", "font": "Font", "font_reset": "Font reset", "session": "Sesja {n}", "space": "Spacja",
+           "save": "Save\nwip", "up": "Góra", "left": "Lewo", "down": "Dół", "right": "Prawo",
+           "clear_line": "Skasuj\nlinię", "page1": "Claude Code", "page2": "Prompty"},
+}
+CONFIG = os.path.join(os.path.expanduser("~"), ".config", "loupedeck-cc", "config.json")
+
+
+def default_lang():
+    try:
+        return json.load(open(CONFIG, encoding="utf-8")).get("lang", "en")
+    except Exception:
+        return "en"
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "art"))
 import pixelart  # noqa: E402
@@ -128,8 +154,9 @@ def load_prompts(path):
     return out[:10]  # 11. kafelek = git diff, 12. = powrot na strone 1
 
 
-def build(os_name, prompts, wheel_plugin=False, target="app"):
+def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     global MODE
+    L = LABELS.get(lang, LABELS["en"])
     win = os_name == "win"
     default = target == "default"
     MODE = "System" if default else "main"  # tryb domyslnej aplikacji DefaultWin to "System"
@@ -144,7 +171,7 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
     else:     # iTerm2 / Ghostty: Cmd+1..8
         tab = lambda n: f"ControlOrCommand+Key{n}"
         nxt, prv = "ControlOrCommand+Shift+Oem6", "ControlOrCommand+Shift+Oem4"
-    round_ctrls = [button(b.macro(f"Sesja {n}", ("key", tab(n)), group="Sesje")) for n in range(1, 9)]
+    round_ctrls = [button(b.macro(L["session"].format(n=n), ("key", tab(n)), group="Sessions")) for n in range(1, 9)]
 
     enter = b.macro("Enter", ("key", "Return"))
     p1 = [
@@ -156,31 +183,31 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
         b.macro("Stop", ("key", "Escape"), icon="stop"),
         b.macro("Kill", ("key", f"{CTRL}+KeyC"), icon="kill"),
         b.text_enter("git\nstatus", "!git status", "git_status"),
-        b.text_enter("Remote", "/remote-control", "remote"),
-        b.text_enter("Nowa\nsesja", "claude", "new"),
-        b.text_enter("Kontynuuj", "claude -c", "continue"),
-        b.icon("$@Generic___@NextTouchPage", "next", "Dalej"),
+        b.text_enter(L["remote"], "/remote-control", "remote"),
+        b.text_enter(L["new"], "claude", "new"),
+        b.text_enter(L["continue"], "claude -c", "continue"),
+        b.icon("$@Generic___@NextTouchPage", "next", L["next"]),
     ]
     p2 = [b.text_enter(label, text, icon) for label, text, icon in prompts]
     p2 += [None] * (10 - len(p2))
     p2 += [b.text_enter("git\ndiff", "!git diff --stat", "git_diff"),
-           b.icon("$@Generic___@PreviousTouchPage", "prev", "Wstecz")]
+           b.icon("$@Generic___@PreviousTouchPage", "prev", L["back"])]
 
     # Kwadratowe (indeksy jak w fabrycznych profilach CT): 1 Undo, 3 Enter, 4 Save, 6/7/9/10 strzalki, 11 wolny
     sq = [button() for _ in range(12)]
     sq[1] = button(b.macro("Undo", ("key", f"{CTRL}+Shift+Minus")))
-    sq[3] = button(enter, b.macro("Spacja", ("key", "Space")))
-    sq[4] = button(b.text_enter("Save\nwip", '!git add -A && git commit -m "wip"'))
-    sq[6] = button(b.macro("Gora", ("key", "ArrowUp")))
-    sq[7] = button(b.macro("Lewo", ("key", "ArrowLeft")))
-    sq[9] = button(b.macro("Dol", ("key", "ArrowDown")))
-    sq[10] = button(b.macro("Prawo", ("key", "ArrowRight")))
-    sq[11] = button(b.macro("Backspace", ("key", "Back")), b.macro("Skasuj\nlinie", ("key", f"{CTRL}+KeyU")))
+    sq[3] = button(enter, b.macro(L["space"], ("key", "Space")))
+    sq[4] = button(b.text_enter(L["save"], '!git add -A && git commit -m "wip"'))
+    sq[6] = button(b.macro(L["up"], ("key", "ArrowUp")))
+    sq[7] = button(b.macro(L["left"], ("key", "ArrowLeft")))
+    sq[9] = button(b.macro(L["down"], ("key", "ArrowDown")))
+    sq[10] = button(b.macro(L["right"], ("key", "ArrowRight")))
+    sq[11] = button(b.macro("Backspace", ("key", "Back")), b.macro(L["clear_line"], ("key", f"{CTRL}+KeyU")))
 
     enc = [
-        encoder(None, b.dial("Zakladki", prv, nxt, icon="tabs")),
-        encoder(b.macro("Font reset", ("key", f"{MOD2}+Key0")),
-                b.dial("Font", f"{MOD2}+Minus", f"{MOD2}+Equals", icon="font")),
+        encoder(None, b.dial(L["tabs"], prv, nxt, icon="tabs")),
+        encoder(b.macro(L["font_reset"], ("key", f"{MOD2}+Key0")),
+                b.dial(L["font"], f"{MOD2}+Minus", f"{MOD2}+Equals", icon="font")),
         encoder("$DefaultWin___ResetVolume", "$DefaultWin___Volume") if win else encoder(),
         encoder(), encoder(), encoder(),
     ]
@@ -196,8 +223,8 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
     rp, sp = gid("round"), gid("square")
     mode = {"$type": "Loupedeck.Service.ProfileLayoutMode20, LoupedeckService", "deviceType": DEVICE,
         "modeName": MODE, "parentModeName": None, "actions": None, "dynamicButtonPages": None, "dynamicEncoderPages": None,
-        "touchPages": [page("btn", tp1, "Claude Code", [button(a) for a in p1]),
-                       page("btn", tp2, "Prompty", [button(a) for a in p2])],
+        "touchPages": [page("btn", tp1, L["page1"], [button(a) for a in p1]),
+                       page("btn", tp2, L["page2"], [button(a) for a in p2])],
         "encoderPages": [page("enc", ep, "Claude Code", enc)],
         "wheelPages": [{"$type": "Loupedeck.Service.ProfileLayoutWheelPage, LoupedeckService", "name": wp,
             "displayName": "Clawd" if wheel_plugin else "Scroll", "description": None,
@@ -248,8 +275,9 @@ def main():
     ap.add_argument("--prompts")
     ap.add_argument("--wheel-plugin", action="store_true")
     ap.add_argument("--target", choices=["app", "default"], default="app")
+    ap.add_argument("--lang", choices=sorted(LABELS), default=default_lang())
     a = ap.parse_args()
-    app, prof, appinfo, profile, icons = build(a.os, load_prompts(a.prompts), a.wheel_plugin, a.target)
+    app, prof, appinfo, profile, icons = build(a.os, load_prompts(a.prompts), a.wheel_plugin, a.target, a.lang)
     if a.target == "default":
         pdir = os.path.join(a.out, "default", prof)
         os.makedirs(os.path.join(pdir, "ActionIcons"), exist_ok=True)

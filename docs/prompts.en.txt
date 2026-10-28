@@ -1,0 +1,7 @@
+# Page 2 of the Loupedeck tiles: one line = one tile (max 10; tile 11 = git diff, 12 = back).
+# Format:  Label | prompt text | icon     (\n in the label = line break on the tile)
+# Icons: remote, review, tests, explain, plan, model, stop, kill, git_status, git_diff, new, continue, compact, clear, resume
+# After editing, run /loupedeck-claude-code again.
+Review\nchanges | Review my uncommitted changes and list concrete bugs. | review
+Tests | Run the tests and fix whatever fails. | tests
+Explain | Explain step by step what the code we are working on does. | explain

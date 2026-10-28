@@ -361,11 +361,39 @@ def wheel_frame(state, f, x=CX, floor=True):
     elif state == "pet":
         mascot(c, x, BY, BIG, eyes="happy", blush=True, mouth="smile", squash=1 if f % 4 < 2 else 0)
         c.sprite(x - 5, top - 9 - (f % 3), HEART, k=2)
+    # --- reakcje na hooki Claude Code -------------------------------------------------------------
+    elif state == "attention":      # Claude czeka na Ciebie: macha i krzyczy "!"
+        bounce = f % 2
+        mascot(c, x, BY - bounce, BIG, eyes="big", arms=["left_up", "right_up"][(f // 2) % 2], mouth="O")
+        c.sprite(x - 3, top - 11 - bounce, BANG_BUBBLE)
+    elif state == "oops":           # narzedzie sie wywalilo: trzesie sie i poci
+        shake = [-1, 1, -1, 1, 0, 0][f % 6]
+        mascot(c, x + shake, BY, BIG, eyes="x", mouth="tongue")
+        c.sprite(x + 12 + shake, top - 1 + (f % 3), SWEAT, k=2)
+        c.sprite(x - 15 + shake, top + 1 + (f % 2), SWEAT, k=1)
+    elif state == "squish":         # /compact: zgniatanie z gory
+        sq = [0, 1, 2, 3, 3, 2, 1, 0][f % 8]
+        mascot(c, x, BY, BIG, eyes="squint", mouth="wavy", squash=sq)
+        for k in (-7, 3):
+            c.sprite(x + k, top - 9 + sq * 2, ARROW_D, k=1)
+    elif state == "done":           # Stop: zadanie skonczone, konfetti
+        jump = [0, 2, 4, 5, 4, 2, 0, 0][f % 8]
+        mascot(c, x, BY - jump, BIG, eyes="happy", arms="up", mouth="smile", blush=True)
+        for i, (cx_, cy_, col) in enumerate(CONFETTI):
+            yy = top - 12 + cy_ + (f * (1 + i % 3)) % 6
+            c.rect(x - 10 + cx_ + (f + i) % 2, yy, 2, 1, col)
+    elif state == "hello":          # SessionStart: macha jedna reka
+        mascot(c, x, BY, BIG, eyes="happy", arms="right_up" if (f // 2) % 2 else "side", mouth="smile")
+        c.sprite(x - 13, top - 8, HI, k=1)
     return c
 
 
+BANG_BUBBLE = [".wwwww.", "wwwyyww", "wwwyyww", "wwwyyww", "wwwwwww", "wwwyyww", ".wwwww.", "..w...."]
+HI = ["y.y.y", "y.y.y", "yyy.y", "y.y.y", "y.y.y"]
+
 WHEEL_STATES = {"idle": 16, "walk_r": 4, "walk_l": 4, "sleep": 15, "happy": 8, "eat": 16, "dizzy": 8,
-                "hungry": 8, "dance": 8, "work": 6, "pet": 8}
+                "hungry": 8, "dance": 8, "work": 6, "pet": 8,
+                "attention": 8, "oops": 12, "squish": 8, "done": 8, "hello": 8}
 
 
 def tile_png(name, scale=6):

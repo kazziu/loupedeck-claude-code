@@ -33,6 +33,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             if (ClaudeMascotPlugin.Mascot != null)
             {
                 ClaudeMascotPlugin.Mascot.Changed += this.OnChanged;
+                ClaudeMascotPlugin.Mascot.Buzz += this.OnBuzz;
             }
             this.OnChanged();
         }
@@ -42,6 +43,19 @@ namespace Loupedeck.ClaudeMascotPlugin
             if (ClaudeMascotPlugin.Mascot != null)
             {
                 ClaudeMascotPlugin.Mascot.Changed -= this.OnChanged;
+                ClaudeMascotPlugin.Mascot.Buzz -= this.OnBuzz;
+            }
+        }
+
+        // Claude czeka na decyzje: krotka wibracja kola (usluga sama koryguje nieznany indeks wzoru).
+        private void OnBuzz()
+        {
+            try
+            {
+                this.Vibrate(1);
+            }
+            catch (Exception)
+            {
             }
         }
 

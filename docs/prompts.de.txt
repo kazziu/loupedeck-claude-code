@@ -1,0 +1,7 @@
+# Seite 2 der Loupedeck-Kacheln: eine Zeile = eine Kachel (max. 10; Kachel 11 = git diff, 12 = zurück).
+# Format:  Beschriftung | Prompt-Text | Icon     (\n in der Beschriftung = Zeilenumbruch auf der Kachel)
+# Icons: remote, review, tests, explain, plan, model, stop, kill, git_status, git_diff, new, continue, compact, clear, resume
+# Nach dem Bearbeiten /loupedeck-claude-code erneut ausführen.
+Review | Prüfe meine nicht committeten Änderungen und nenne konkrete Fehler. | review
+Tests | Führe die Tests aus und behebe alles, was fehlschlägt. | tests
+Erklären | Erkläre Schritt für Schritt, was der Code macht, an dem wir gerade arbeiten. | explain

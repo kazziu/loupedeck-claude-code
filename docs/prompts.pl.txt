@@ -1,0 +1,7 @@
+# Strona 2 kafelków Loupedecka: jedna linia = jeden kafelek (max 10; kafelek 11 = git diff, 12 = powrót).
+# Format:  Etykieta | tekst promptu | ikona     (\n w etykiecie = nowa linia na kafelku)
+# Ikony: remote, review, tests, explain, plan, model, stop, kill, git_status, git_diff, new, continue, compact, clear, resume
+# Po edycji odpal ponownie /loupedeck-claude-code.
+Review\nzmian | Zrób code review moich niezacommitowanych zmian i wypisz konkretne błędy. | review
+Testy | Uruchom testy i napraw to, co nie przechodzi. | tests
+Wyjaśnij | Wyjaśnij krok po kroku, co robi kod, nad którym teraz pracujemy. | explain

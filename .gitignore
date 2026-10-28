@@ -1,5 +1,5 @@
-plugin/bin/
-plugin/obj/
-plugin/frames/
-__pycache__/
 *.pyc
+__pycache__/
+plugin/bin/
+plugin/frames/
+plugin/obj/

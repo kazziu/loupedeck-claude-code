@@ -3,8 +3,8 @@ name: ClaudeMascot
 displayName: Clawd (Claude Code tamagotchi)
 pluginFileName: ClaudeMascotPlugin.dll
 version: 1.0.0
-author: Kazek
-copyright: Kazek
+author: kazziu
+copyright: Copyright (c) 2026 kazziu
 minimumLoupedeckVersion: 6.0
 backgroundColor: 4278190080
 foregroundColor: 4294967295
