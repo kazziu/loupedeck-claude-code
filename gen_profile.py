@@ -186,7 +186,9 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
     ]
 
     if wheel_plugin:  # WheelToolClawd z wtyczki ClaudeMascot: pelny ekran, sam obsluguje dotyk i obrot
-        wheel = {"templateName": "WheelToolClawd", "actions": "", "adjustment": ""}
+        # Bez prefiksu usluga szuka szablonu tylko w PluginApi, w sobie i we wtyczce NATYWNEJ profilu
+        # (PluginManager.CreateWheelTool); "<wtyczka>___<klasa>" kieruje ja do naszej wtyczki.
+        wheel = {"templateName": "ClaudeMascot___WheelToolClawd", "actions": "", "adjustment": ""}
     else:
         wheel = {"templateName": "WheelToolAnalogClock", "actions": enter, "adjustment": "$@Generic___@MouseWheel"}
 

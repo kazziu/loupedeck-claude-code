@@ -80,7 +80,7 @@ Modyfikatory: Windows = Ctrl/Alt, macOS = ⌘/⌥. Niżej "MOD1" to Alt (Win) / 
 | Kafelek 10 "Nowa sesja" | Text + Enter | `claude` |
 | Kafelek 11 "Kontynuuj" | Text + Enter | `claude -c` |
 | Kafelek 12 "Strona 2" | Switch Page | przejście na stronę 2 (własne prompty) |
-| Duże koło | szablon `WheelToolClawd` z wtyczki ClaudeMascot (pełny ekran 240×240) | obrót = scroll terminala (za szybko = zawroty głowy); dotyk = karmienie / budzenie / głaskanie; podwójny dotyk = taniec; przytrzymanie = `Enter` |
+| Duże koło | szablon `ClaudeMascot___WheelToolClawd` (pełny ekran 240×240) | obrót = scroll terminala (za szybko = zawroty głowy); dotyk = karmienie / budzenie / głaskanie; podwójny dotyk = taniec; przytrzymanie = `Enter` |
 | (bez wtyczki) | Mouse Scroll + Enter | fallback: zegar, obrót = scroll, dotyk = `Enter` |
 | Pokrętło L1 | Keyboard Shortcut ± | `MOD1+n` / `MOD1+p` (tmux) lub next/prev tab |
 | Pokrętło L2 | Keyboard Shortcut ± | `MOD2+=` / `MOD2+-` (rozmiar czcionki) |
@@ -102,7 +102,9 @@ dizzy, hungry, dance, work, pet) są wbudowane w DLL wtyczki. Nowa ikona = funkc
 w `TILE_NAMES`. Podgląd: wyrenderuj `tile(n).image(6)` / `wheel_frame(s, f).image(5)` do PNG i obejrzyj.
 
 **Wtyczka ClaudeMascot (`plugin/`, C#):** tamagotchi na kole. Pełny ekran koła daje tylko własna klasa
-`WheelTool` (`plugin/WheelToolClawd.cs`), bo usługa rejestruje szablony koła po nazwie klasy, tak jak zegar w DefaultWin.
+`WheelTool` (`plugin/WheelToolClawd.cs`), a w profilu trzeba ją wskazać jako `templateName: "ClaudeMascot___WheelToolClawd"`.
+Bez prefiksu `<wtyczka>___` usługa (`PluginManager.CreateWheelTool`) szuka klasy tylko w PluginApi, w samej usłudze
+i we wtyczce **natywnej** profilu (np. DefaultWin), więc koło zostaje martwe.
 Szablon `WheelToolGeneric1x1` pokazuje obraz akcji tylko jako małą ikonę z podpisem. Głód rośnie przez ~45 min, po 3 min bez
 dotyku maskotka zasypia, czasem spaceruje albo tańczy. Gdy plik `~/.config/loupedeck-cc/claude-state`
 zawiera `working` (np. zapisywany przez hooki Claude Code), maskotka pisze na laptopie.
