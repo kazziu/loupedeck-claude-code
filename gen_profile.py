@@ -171,7 +171,14 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     else:     # iTerm2 / Ghostty: Cmd+1..8
         tab = lambda n: f"ControlOrCommand+Key{n}"
         nxt, prv = "ControlOrCommand+Shift+Oem6", "ControlOrCommand+Shift+Oem4"
-    round_ctrls = [button(b.macro(L["session"].format(n=n), ("key", tab(n)), group="Sessions")) for n in range(1, 9)]
+    tab_macros = [b.macro(L["session"].format(n=n), ("key", tab(n)), group="Sessions") for n in range(1, 9)]
+    if wheel_plugin and win:
+        # The plugin focuses the N-th terminal WINDOW (reading order on screen) when sessions live in separate
+        # windows and falls back to tab N with a single window; Fn + button always sends the plain tab shortcut.
+        round_ctrls = [button(f"$ClaudeMascot___Loupedeck.ClaudeMascotPlugin.Session{n}", tab_macros[n - 1])
+                       for n in range(1, 9)]
+    else:
+        round_ctrls = [button(m) for m in tab_macros]
 
     enter = b.macro("Enter", ("key", "Return"))
     p1 = [
@@ -205,7 +212,8 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     sq[11] = button(b.macro("Backspace", ("key", "Back")), b.macro(L["clear_line"], ("key", f"{CTRL}+KeyU")))
 
     enc = [
-        encoder(None, b.dial(L["tabs"], prv, nxt, icon="tabs")),
+        encoder(None, b.icon("$ClaudeMascot___Loupedeck.ClaudeMascotPlugin.SessionDial", "tabs", L["tabs"])
+                if wheel_plugin and win else b.dial(L["tabs"], prv, nxt, icon="tabs")),
         encoder(b.macro(L["font_reset"], ("key", f"{MOD2}+Key0")),
                 b.dial(L["font"], f"{MOD2}+Minus", f"{MOD2}+Equals", icon="font")),
         encoder("$DefaultWin___ResetVolume", "$DefaultWin___Volume") if win else encoder(),

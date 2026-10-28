@@ -20,7 +20,7 @@
 | | |
 |---|---|
 | **12 + 12 touch tiles** | `/compact`, `/clear`, `/model`, `/resume`, `/remote-control`, plan mode, Esc, Ctrl+C, `git status`, new session, `claude -c`, and a second page of your own prompts. |
-| **8 round buttons** | Jump straight to terminal tab 1–8 (one Claude Code session per tab). |
+| **8 round buttons** | Jump straight to Claude Code session 1–8. Works with a wall of separate terminal windows (numbered in reading order on screen: top row first, left to right) and with tabs in one window. Fn + button always switches tabs. |
 | **Dials** | Previous/next tab, terminal font size, system volume. |
 | **Big wheel** | Clawd, a tamagotchi that lives on the round screen. Turning the wheel still scrolls your terminal. |
 | **Claude Code hooks** | Clawd types on a laptop while Claude works. When Claude needs you, he waves, shows a `!` and **the wheel vibrates**. He celebrates when a task is done and sweats when a tool fails. |

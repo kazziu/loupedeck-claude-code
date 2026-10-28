@@ -20,7 +20,7 @@
 | | |
 |---|---|
 | **12 + 12 Touch-Kacheln** | `/compact`, `/clear`, `/model`, `/resume`, `/remote-control`, Plan-Modus, Esc, Strg+C, `git status`, neue Sitzung, `claude -c` und eine zweite Seite mit deinen eigenen Prompts. |
-| **8 runde Tasten** | Direkt zu Terminal-Tab 1–8 springen (eine Claude-Code-Sitzung pro Tab). |
+| **8 runde Tasten** | Direkt zu Claude-Code-Sitzung 1–8 springen. Funktioniert mit einer Wand aus einzelnen Terminalfenstern (nummeriert in Leserichtung: oberste Reihe zuerst, von links nach rechts) und mit Tabs in einem Fenster. Fn + Taste wechselt immer den Tab. |
 | **Drehregler** | Vorheriger/nächster Tab, Schriftgröße im Terminal, Systemlautstärke. |
 | **Großes Rad** | Clawd, ein Tamagotchi, das auf dem runden Display wohnt. Drehen scrollt weiterhin das Terminal. |
 | **Claude-Code-Hooks** | Clawd tippt auf einem Laptop, während Claude arbeitet. Wenn Claude dich braucht, winkt er, zeigt ein `!` und **das Rad vibriert**. Er feiert, wenn eine Aufgabe fertig ist, und schwitzt, wenn ein Tool fehlschlägt. |

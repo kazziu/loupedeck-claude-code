@@ -20,7 +20,7 @@
 | | |
 |---|---|
 | **12 + 12 kafelków dotykowych** | `/compact`, `/clear`, `/model`, `/resume`, `/remote-control`, tryb planu, Esc, Ctrl+C, `git status`, nowa sesja, `claude -c` i druga strona z Twoimi promptami. |
-| **8 przycisków okrągłych** | Skok prosto do zakładki terminala 1–8 (jedna sesja Claude Code na zakładkę). |
+| **8 przycisków okrągłych** | Skok prosto do sesji Claude Code 1–8. Działa ze ścianą osobnych okien terminala (numerowanych tak, jak się czyta ekran: od górnego rzędu, od lewej do prawej) i z zakładkami w jednym oknie. Fn + przycisk zawsze przełącza zakładki. |
 | **Pokrętła** | Poprzednia/następna zakładka, rozmiar czcionki terminala, głośność. |
 | **Duże koło** | Clawd, tamagotchi mieszkające na okrągłym ekranie. Obrót koła nadal przewija terminal. |
 | **Hooki Claude Code** | Clawd pisze na laptopie, gdy Claude pracuje. Gdy Claude czeka na Ciebie, macha, pokazuje `!` i **koło wibruje**. Świętuje koniec zadania i poci się, gdy narzędzie zawiedzie. |

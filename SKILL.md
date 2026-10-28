@@ -42,7 +42,11 @@ The profile only sends keys, so the terminal needs stable shortcuts:
 - **Windows Terminal**: `ctrl+alt+1..8` → `switchToTab` index 0..7 are WT defaults; do not add them. Add
   `nextTab` / `prevTab` with `"tabSwitcherMode": "disabled"` on `ctrl+alt+right` / `ctrl+alt+left`.
   WT 1.24+ keeps commands in `actions` (with an `id`) and keys in `keybindings`. Back up `settings.json` first.
-- **iTerm2 / Ghostty**: `⌘1..8` and `⌘⇧[` / `⌘⇧]` work out of the box.
+- **Separate windows instead of tabs** (common on big monitors): on Windows the plugin's `Session1..8` actions
+  focus the N-th Windows Terminal window in reading order on screen (minimized windows last). With a single
+  window they fall back to `Ctrl+Alt+N`. Fn + round button always sends the tab shortcut. See `plugin/TerminalSessions.cs`.
+- **iTerm2 / Ghostty**: `⌘1..8` and `⌘⇧[` / `⌘⇧]` work out of the box for tabs. Separate windows on macOS still
+  need a port of `TerminalSessions.cs` (e.g. AppleScript/AX to raise the N-th window).
 - **tmux** (e.g. Claude inside WSL): the generator has no tmux branch yet. Add one (`M-1..8` → `select-window`)
   if the user lives in tmux.
 
