@@ -5,12 +5,12 @@ namespace Loupedeck.ClaudeMascotPlugin
 
     using Loupedeck.Devices.Loupedeck2Devices;
 
-    // Narzedzie kola CT rysujace caly ekran 240x240 (jak zegar z DefaultWin). Usluga rejestruje je
-    // po nazwie klasy, w profilu: wheelPages[].templateName = "WheelToolClawd".
-    //   obrot         -> scroll terminala; za szybko = zawroty glowy
-    //   dotyk         -> karmienie / budzenie / glaskanie
-    //   podwojny      -> taniec
-    //   przytrzymanie -> Enter (dawna funkcja kola)
+    // CT wheel tool that draws the whole 240x240 screen (like the DefaultWin clock). Reference it in the
+    // profile as wheelPages[].templateName = "ClaudeMascot___WheelToolClawd" (plugin prefix required).
+    //   rotate     -> scroll the terminal; too fast = dizzy
+    //   tap        -> feed / wake up / pet
+    //   double tap -> dance
+    //   long press -> Enter (the wheel's old job)
     public class WheelToolClawd : WheelTool
     {
         private const Int32 MOUSEEVENTF_WHEEL = 0x0800;
@@ -47,7 +47,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             }
         }
 
-        // Claude czeka na decyzje: krotka wibracja kola (usluga sama koryguje nieznany indeks wzoru).
+        // Claude is waiting for a decision: short wheel vibration (the service corrects an unknown waveform index).
         private void OnBuzz()
         {
             try

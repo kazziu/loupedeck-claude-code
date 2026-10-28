@@ -1,13 +1,13 @@
-"""Pixel art maskotki Claude Code rysowany kodem (bez generatorow obrazu).
+"""Claude Code mascot pixel art, drawn in code (no image generators).
 
-Wszystko powstaje na siatce pikseli i jest skalowane metoda nearest neighbour.
-  tiles(): ikony kafelkow 20x20 (render 240x240)
-  wheel_frames(): klatki animacji tamagotchi na kolo 48x48 (render 240x240)
+Everything is drawn on a pixel grid and scaled with nearest neighbour.
+  tile(name): tile icons on a 20x20 grid
+  wheel_frame(state, f): tamagotchi animation frames for the wheel on a 40x40 grid (rendered at 240x240)
 """
 from PIL import Image, ImageDraw
 import math
 
-# --- paleta -----------------------------------------------------------------------------------------
+# --- palette -----------------------------------------------------------------------------------------
 T = (0, 0, 0, 0)
 ORANGE, ORANGE_HI, ORANGE_LO = (217, 119, 87, 255), (236, 152, 120, 255), (178, 86, 58, 255)
 INK = (24, 20, 18, 255)
@@ -52,9 +52,9 @@ class Canvas:
         return im.resize((self.w * scale, self.h * scale), Image.NEAREST)
 
 
-# --- maskotka ---------------------------------------------------------------------------------------
+# --- mascot ----------------------------------------------------------------------------------------
 class Size:
-    """Proporcje maskotki w pikselach siatki."""
+    """Mascot proportions in grid pixels."""
     def __init__(self, W, H, ew, eh, aw, ah, lw, lh):
         self.W, self.H, self.ew, self.eh, self.aw, self.ah, self.lw, self.lh = W, H, ew, eh, aw, ah, lw, lh
 
@@ -64,11 +64,11 @@ BIG = Size(26, 15, 2, 5, 3, 4, 3, 4)
 
 def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mouth=None, squash=0,
            blush=False, tilt=0):
-    """Rysuje maskotke. cx = srodek, by = dolny wiersz nog. Zwraca slownik punktow zaczepienia."""
+    """Draws the mascot. cx = centre, by = bottom row of the legs. Returns a dict of anchor points."""
     W, H = s.W + 2 * squash, max(3, s.H - squash)
     lh = s.lh if step != 9 else 0
     x0, y0 = cx - W // 2, by - lh - H + 1
-    # nogi (step: 0 = stoi, 1/2 = fazy chodu)
+    # legs (step: 0 = standing, 1/2 = walk phases)
     gap = W // 5
     legs = [x0 + gap // 2 + 1, x0 + gap + 2, x0 + W - gap - 2 - s.lw + 1, x0 + W - gap // 2 - 1 - s.lw + 1]
     legs = [x0 + 1 + round(i * (W - 2 - s.lw) / 3) for i in range(4)]
@@ -77,7 +77,7 @@ def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mout
         if step in (1, 2) and (i % 2 == step - 1):
             dy = -1
         cv.rect(lx, by - lh + 1 + dy, s.lw, lh, ORANGE_LO)
-    # tulow z cieniowaniem; tilt przesuwa gorne wiersze
+    # body with shading; tilt shifts the upper rows
     for j in range(H):
         off = round(tilt * (H - 1 - j) / max(1, H - 1))
         for i in range(W):
@@ -90,7 +90,7 @@ def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mout
                 c = ORANGE_HI if j < H // 2 else ORANGE
             cv.set(x0 + i + off, y0 + j, c)
     top_off = tilt
-    # rece
+    # arms
     ay = y0 + H // 2 - s.ah // 2
     if arms == "side":
         cv.rect(x0 - s.aw, ay, s.aw, s.ah, ORANGE)
@@ -106,7 +106,7 @@ def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mout
     elif arms == "down":
         cv.rect(x0 - s.aw + 1, ay + s.ah, s.aw - 1 or 1, s.ah, ORANGE)
         cv.rect(x0 + W, ay + s.ah, s.aw - 1 or 1, s.ah, ORANGE)
-    # oczy
+    # eyes
     ey = y0 + max(1, H // 2 - s.eh // 2 - (1 if s is BIG else 0))
     exs = [x0 + W // 4 + look + top_off // 2, x0 + W - W // 4 - s.ew + look + top_off // 2]
     ew, eh = s.ew, s.eh
@@ -147,7 +147,7 @@ def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mout
     if eyes == "shades":
         cv.sprite(exs[0] - 2, ey, ["kkkkkkkkkk", ".wkk..wkk."][: 2] if s is SMALL else
                   ["kkkkkkkkkkkkkkkkkkkkkk", "kwwkkkkk......kwwkkkkk", ".kkkkkk........kkkkkk.", "..kkkk..........kkkk.."])
-    # usta
+    # mouth
     mx, my = x0 + W // 2 - 1 + top_off // 2, ey + eh + (1 if s is BIG else 0)
     if mouth == "o":
         cv.rect(mx, my, 2, 2 if s is BIG else 1, INK)
@@ -171,7 +171,7 @@ def mascot(cv, cx, by, s=SMALL, eyes="normal", look=0, arms="side", step=0, mout
     return {"x0": x0, "y0": y0, "W": W, "H": H, "ay": ay, "eyes": exs, "ey": ey, "mouth": (mx, my)}
 
 
-# --- male rekwizyty (string art) ------------------------------------------------------------------
+# --- small props (string art) ---------------------------------------------------------------------
 ARROW_R = ["...w...", "...ww..", "wwwwww.", "wwwwwww", "wwwwww.", "...ww..", "...w..."]
 ARROW_D = [".www.", ".www.", "wwwww", ".www.", "..w.."]
 PARTY = ["...y...", "...v...", "..vwv..", "..wvw..", ".vwvwv.", ".wvwvw.", "vwvwvwv"]
@@ -208,7 +208,7 @@ WAVES = ["..UUUUU..", ".U.....U.", "U..UUU..U", "..U...U..", "....U...."]
 
 
 def tile(name):
-    """Ikony kafelkow, siatka 20x20."""
+    """Tile icons, 20x20 grid."""
     c = Canvas(20)
     if name == "compact":
         mascot(c, 10, 18, eyes="squint", squash=3, mouth="wavy")
@@ -284,11 +284,11 @@ TILE_NAMES = ["compact", "clear", "model", "resume", "plan", "stop", "kill", "gi
               "new", "continue", "next", "prev", "review", "tests", "explain", "tabs", "font", "remote"]
 
 
-# --- kolo: tamagotchi -------------------------------------------------------------------------------
-# Siatka 40x40 renderowana x6 = 240 px. Maskotka z rekami ma 32 kratki = 80% szerokosci ekranu.
+# --- wheel: tamagotchi -----------------------------------------------------------------------------
+# 40x40 grid rendered x6 = 240 px. The mascot with arms is 32 cells = 80% of the screen width.
 G = 40
-CX = 20         # srodek maskotki, wzgledem niego wtyczka przesuwa klatki podczas spaceru
-BY = 30         # dolny wiersz nog
+CX = 20         # mascot centre; the plugin shifts frames relative to it while walking
+BY = 30         # bottom row of the legs
 SCALE = 6
 WALK_X = [17, 23]
 
@@ -301,11 +301,11 @@ def wheel_base(c):
 
 
 def wheel_frame(state, f, x=CX, floor=True):
-    """Jedna klatka; state = nazwa zachowania, f = numer klatki, x = srodek maskotki."""
+    """One frame; state = behaviour name, f = frame number, x = mascot centre."""
     c = Canvas(G)
     if floor:
         wheel_base(c)
-    top = BY - BIG.lh - BIG.H + 1          # gorny wiersz tulowia
+    top = BY - BIG.lh - BIG.H + 1          # top row of the body
     if state == "idle":
         eyes = "blink" if f % 16 == 15 else "normal"
         look = [0, 0, 1, 1, 0, 0, -1, -1][(f // 4) % 8]
@@ -361,28 +361,28 @@ def wheel_frame(state, f, x=CX, floor=True):
     elif state == "pet":
         mascot(c, x, BY, BIG, eyes="happy", blush=True, mouth="smile", squash=1 if f % 4 < 2 else 0)
         c.sprite(x - 5, top - 9 - (f % 3), HEART, k=2)
-    # --- reakcje na hooki Claude Code -------------------------------------------------------------
-    elif state == "attention":      # Claude czeka na Ciebie: macha i krzyczy "!"
+    # --- reactions to Claude Code hooks -----------------------------------------------------------
+    elif state == "attention":      # Claude needs you: waves and shouts "!"
         bounce = f % 2
         mascot(c, x, BY - bounce, BIG, eyes="big", arms=["left_up", "right_up"][(f // 2) % 2], mouth="O")
         c.sprite(x - 3, top - 11 - bounce, BANG_BUBBLE)
-    elif state == "oops":           # narzedzie sie wywalilo: trzesie sie i poci
+    elif state == "oops":           # a tool failed: shakes and sweats
         shake = [-1, 1, -1, 1, 0, 0][f % 6]
         mascot(c, x + shake, BY, BIG, eyes="x", mouth="tongue")
         c.sprite(x + 12 + shake, top - 1 + (f % 3), SWEAT, k=2)
         c.sprite(x - 15 + shake, top + 1 + (f % 2), SWEAT, k=1)
-    elif state == "squish":         # /compact: zgniatanie z gory
+    elif state == "squish":         # /compact: squished from above
         sq = [0, 1, 2, 3, 3, 2, 1, 0][f % 8]
         mascot(c, x, BY, BIG, eyes="squint", mouth="wavy", squash=sq)
         for k in (-7, 3):
             c.sprite(x + k, top - 9 + sq * 2, ARROW_D, k=1)
-    elif state == "done":           # Stop: zadanie skonczone, konfetti
+    elif state == "done":           # Stop: task done, confetti
         jump = [0, 2, 4, 5, 4, 2, 0, 0][f % 8]
         mascot(c, x, BY - jump, BIG, eyes="happy", arms="up", mouth="smile", blush=True)
         for i, (cx_, cy_, col) in enumerate(CONFETTI):
             yy = top - 12 + cy_ + (f * (1 + i % 3)) % 6
             c.rect(x - 10 + cx_ + (f + i) % 2, yy, 2, 1, col)
-    elif state == "hello":          # SessionStart: macha jedna reka
+    elif state == "hello":          # SessionStart: waves one arm
         mascot(c, x, BY, BIG, eyes="happy", arms="right_up" if (f // 2) % 2 else "side", mouth="smile")
         c.sprite(x - 13, top - 8, HI, k=1)
     return c
@@ -404,8 +404,8 @@ def tile_png(name, scale=6):
 
 
 def export_wheel(outdir, scale=SCALE):
-    """Klatki kola dla wtyczki: <stan>_<n>.png (240x240, przezroczyste, maskotka na x=CX),
-    floor.png (tlo z podloga) i frames.json. Wtyczka sklada: floor + klatka przesunieta o (x-CX)*scale."""
+    """Wheel frames for the plugin: <state>_<n>.png (240x240, transparent, mascot at x=CX),
+    floor.png (background with floor) and frames.json. The plugin composes floor + frame shifted by (x-CX)*scale."""
     import json, os
     os.makedirs(outdir, exist_ok=True)
     floor = Canvas(G)

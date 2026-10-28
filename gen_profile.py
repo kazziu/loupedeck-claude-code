@@ -50,9 +50,9 @@ MODE = "main"
 def gid(*parts):
     return uuid.uuid5(NS, "|".join(parts)).hex.upper()
 
-# Nazwy klawiszy z tabeli UI Loupedecka (configui2/app.asar): Back, Return, Escape, Tab, Space,
-# Minus, Equals, Key0-9, KeyA-Z, ArrowUp/Down/Left/Right. Modyfikatory: ControlOrCommand (Ctrl / Cmd),
-# Control (prawdziwy Ctrl takze na Macu), AltOrOption, Shift, Windows.
+# Key names come from the key table in the Loupedeck UI (configui2/app.asar): Back, Return, Escape, Tab, Space,
+# Minus, Equals, Key0-9, KeyA-Z, ArrowUp/Down/Left/Right. Modifiers: ControlOrCommand (Ctrl / Cmd),
+# Control (a real Ctrl, also on macOS), AltOrOption, Shift, Windows.
 DISPLAY = {"ControlOrCommand": "Ctrl", "Control": "Ctrl", "AltOrOption": "Alt", "Shift": "Shift",
            "Back": "Backspace", "Equals": "=", "Minus": "-"}
 
@@ -60,7 +60,7 @@ class Builder:
     def __init__(self, os_name, layout_id):
         self.os, self.layout = os_name, layout_id
         self.macros, self.adjustments = [], []
-        self.icons = {}  # actionId -> (nazwa ikony z pixelart.TILE_NAMES, podpis)
+        self.icons = {}  # actionId -> (icon name from pixelart.TILE_NAMES, caption)
 
     def key(self, combo):
         parts = combo.split("+")
@@ -116,7 +116,7 @@ class Builder:
 
 
 def ict(icon, caption):
-    """Szablon ikony Loupedecka (.ict): pixel art + podpis. Wspolrzedne area sa w procentach kafelka."""
+    """Loupedeck icon template (.ict): pixel art + caption. `area` coordinates are percent of the tile."""
     return {"backgroundColor": 4278190080, "items": [
         {"image": base64.b64encode(pixelart.tile_png(icon)).decode(), "imageFileName": f"{icon}.png",
          "imageColor": 4294967295, "imageRotation": "None", "isVisible": True, "itemType": "Image",
@@ -141,7 +141,7 @@ def page(kind, name, display, controls):
 
 
 def load_prompts(path):
-    """prompts.txt: `Etykieta | tekst promptu | ikona` (ikona opcjonalna, nazwa z pixelart.TILE_NAMES)."""
+    """prompts.txt: `Label | prompt text | icon` (icon optional, a name from pixelart.TILE_NAMES)."""
     out = []
     if path and os.path.exists(path):
         for line in open(path, encoding="utf-8"):
@@ -151,7 +151,7 @@ def load_prompts(path):
             parts = [s.strip() for s in line.split("|")]
             icon = parts[2] if len(parts) > 2 and parts[2] in pixelart.TILE_NAMES else "explain"
             out.append((parts[0].replace("\\n", "\n"), parts[1], icon))
-    return out[:10]  # 11. kafelek = git diff, 12. = powrot na strone 1
+    return out[:10]  # tile 11 = git diff, tile 12 = back to page 1
 
 
 def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
@@ -159,13 +159,13 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     L = LABELS.get(lang, LABELS["en"])
     win = os_name == "win"
     default = target == "default"
-    MODE = "System" if default else "main"  # tryb domyslnej aplikacji DefaultWin to "System"
+    MODE = "System" if default else "main"  # the DefaultWin default app uses the "System" mode
     b = Builder(os_name, "68486165" if win else "0")
-    CTRL = "Control"            # prawdziwy Ctrl (Ctrl+C, Ctrl+U, Ctrl+_) na obu systemach
-    MOD2 = "ControlOrCommand"   # Ctrl na Windows, Cmd na Macu
+    CTRL = "Control"            # a real Ctrl (Ctrl+C, Ctrl+U, Ctrl+_) on both systems
+    MOD2 = "ControlOrCommand"   # Ctrl on Windows, Cmd on macOS
 
-    # Przyciski okragle 1-8 -> zakladki terminala
-    if win:   # Windows Terminal: domyslne Ctrl+Alt+1..8 = switchToTab index 0..7
+    # Round buttons 1-8 -> terminal tabs
+    if win:   # Windows Terminal: default Ctrl+Alt+1..8 = switchToTab index 0..7
         tab = lambda n: f"ControlOrCommand+AltOrOption+Key{n}"
         nxt, prv = "ControlOrCommand+AltOrOption+ArrowRight", "ControlOrCommand+AltOrOption+ArrowLeft"
     else:     # iTerm2 / Ghostty: Cmd+1..8
@@ -193,7 +193,7 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     p2 += [b.text_enter("git\ndiff", "!git diff --stat", "git_diff"),
            b.icon("$@Generic___@PreviousTouchPage", "prev", L["back"])]
 
-    # Kwadratowe (indeksy jak w fabrycznych profilach CT): 1 Undo, 3 Enter, 4 Save, 6/7/9/10 strzalki, 11 wolny
+    # Square buttons (indices as in the factory CT profiles): 1 Undo, 3 Enter, 4 Save, 6/7/9/10 arrows, 11 spare
     sq = [button() for _ in range(12)]
     sq[1] = button(b.macro("Undo", ("key", f"{CTRL}+Shift+Minus")))
     sq[3] = button(enter, b.macro(L["space"], ("key", "Space")))
@@ -212,9 +212,9 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
         encoder(), encoder(), encoder(),
     ]
 
-    if wheel_plugin:  # WheelToolClawd z wtyczki ClaudeMascot: pelny ekran, sam obsluguje dotyk i obrot
-        # Bez prefiksu usluga szuka szablonu tylko w PluginApi, w sobie i we wtyczce NATYWNEJ profilu
-        # (PluginManager.CreateWheelTool); "<wtyczka>___<klasa>" kieruje ja do naszej wtyczki.
+    if wheel_plugin:  # WheelToolClawd from the ClaudeMascot plugin: full screen, handles touch and rotation itself
+        # Without a prefix the service only looks in PluginApi, in itself and in the profile's NATIVE plugin
+        # (PluginManager.CreateWheelTool); "<plugin>___<class>" points it at our plugin.
         wheel = {"templateName": "ClaudeMascot___WheelToolClawd", "actions": "", "adjustment": ""}
     else:
         wheel = {"templateName": "WheelToolAnalogClock", "actions": enter, "adjustment": "$@Generic___@MouseWheel"}

@@ -3,11 +3,11 @@ namespace Loupedeck.ClaudeMascotPlugin
     using System;
     using System.Runtime.InteropServices;
 
-    // Dotyk ekranu kola: karmienie (gdy glodny), budzenie albo glaskanie.
+    // Touching the wheel screen: feed (when hungry), wake up or pet. Can also be placed on a tile.
     public class TamagotchiCommand : PluginDynamicCommand
     {
         public TamagotchiCommand()
-            : base("Clawd", "Tamagotchi Claude Code: dotknij, zeby poglaskac albo nakarmic", "Clawd", DeviceType.All)
+            : base("Clawd", "Claude Code tamagotchi: tap to pet or feed", "Clawd", DeviceType.All)
         {
         }
 
@@ -39,7 +39,7 @@ namespace Loupedeck.ClaudeMascotPlugin
         protected override String GetCommandDisplayName(String actionParameter, PluginImageSize imageSize) => "Clawd";
     }
 
-    // Obrot kola: scroll w terminalu (jak zwykle) + maskotka krecaca sie za szybko dostaje zawrotow glowy.
+    // Turning the wheel: scrolls the terminal as usual; spin too fast and the mascot gets dizzy.
     public class TamagotchiScroll : PluginDynamicAdjustment
     {
         private const Int32 MOUSEEVENTF_WHEEL = 0x0800;
@@ -48,7 +48,7 @@ namespace Loupedeck.ClaudeMascotPlugin
         private static extern void mouse_event(Int32 flags, Int32 dx, Int32 dy, Int32 data, IntPtr extra);
 
         public TamagotchiScroll()
-            : base("Clawd scroll", "Scroll historii terminala; za szybko = Clawd ma zawroty glowy", "Clawd", false, DeviceType.All)
+            : base("Clawd scroll", "Scrolls the terminal; too fast and Clawd gets dizzy", "Clawd", false, DeviceType.All)
         {
         }
 

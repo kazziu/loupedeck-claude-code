@@ -7,11 +7,11 @@ namespace Loupedeck.ClaudeMascotPlugin
     using System.Text.Json;
     using System.Threading;
 
-    // Tamagotchi: stan, statystyki i skladanie klatek (pixel art z art/pixelart.py -> frames/*.png).
-    // Dwa zrodla zachowan:
-    //   1. wlasne zycie maskotki (spacer, sen, glod, taniec) i dotyk/obrot kola,
-    //   2. stan sesji Claude Code z hookow (~/.config/loupedeck-cc/sessions/*.json, patrz hooks/mascot_hook.py).
-    // Stan Claude ma pierwszenstwo, ale swiezy dotyk uzytkownika na chwile wygrywa.
+    // Tamagotchi: state, stats and frame composition (pixel art from art/pixelart.py -> frames/*.png).
+    // Two sources of behaviour:
+    //   1. the mascot's own life (walking, sleep, hunger, dancing) plus wheel touch/rotation,
+    //   2. Claude Code session state from the hooks (~/.config/loupedeck-cc/sessions/*.json, see hooks/mascot_hook.py).
+    // Claude's state wins, but a fresh touch by the user takes over for a moment.
     internal sealed class Mascot : IDisposable
     {
         private const Int32 TickMs = 120;
@@ -20,7 +20,7 @@ namespace Loupedeck.ClaudeMascotPlugin
         private static readonly TimeSpan FullHungerAfter = TimeSpan.FromMinutes(45);
         private static readonly TimeSpan UserLock = TimeSpan.FromSeconds(4);
 
-        // priorytet stanow Claude (wyzej = wazniejszy) -> animacja
+        // Claude state priority (higher = more important) -> animation
         private static readonly String[] ClaudePriority = { "idle", "working", "hello", "done", "compact", "oops", "attention" };
         private static readonly Dictionary<String, String> ClaudeAnimation = new()
         {
@@ -45,7 +45,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 
         public event Action Changed;
 
-        // Claude zaczal czekac na uzytkownika (do wibracji kola).
+        // Claude started waiting for the user (used for the wheel vibration).
         public event Action Buzz;
 
         public Mascot(Assembly assembly)
@@ -80,7 +80,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             }
             catch (Exception)
             {
-                // brak klatek: Render() zwroci prosty placeholder
+                // no frames: Render() returns a simple placeholder
             }
         }
 
@@ -88,7 +88,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 
         public void Dispose() => this._timer?.Dispose();
 
-        // --- interakcje ------------------------------------------------------------------------------
+        // --- interaction ----------------------------------------------------------------------------
         public void Touch()
         {
             lock (this._lock)
@@ -96,12 +96,12 @@ namespace Loupedeck.ClaudeMascotPlugin
                 this.UserActed();
                 if (this._state == "sleep")
                 {
-                    this.Set("happy", 16);                 // obudzony, ale zadowolony
+                    this.Set("happy", 16);                 // woken up, but happy
                 }
                 else if (this._hunger > 40)
                 {
                     this._hunger = 0;
-                    this.Set("eat", 16 * 2);              // dwie porcje chrupania
+                    this.Set("eat", 16 * 2);              // two rounds of munching
                     this._userLockUntil = DateTime.Now.AddSeconds(4);
                 }
                 else
@@ -146,7 +146,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             this._userLockUntil = DateTime.Now + UserLock;
         }
 
-        // --- petla -----------------------------------------------------------------------------------
+        // --- loop -------------------------------------------------------------------------------------
         private void Tick()
         {
             Boolean buzz = false;
@@ -163,7 +163,7 @@ namespace Loupedeck.ClaudeMascotPlugin
                     buzz = this._claude == "attention" && before != "attention";
                     if (this._claude != before)
                     {
-                        this._ticksLeft = 0;              // reaguj od razu
+                        this._ticksLeft = 0;              // react right away
                     }
                 }
 
@@ -192,7 +192,7 @@ namespace Loupedeck.ClaudeMascotPlugin
         {
             if (DateTime.Now < this._userLockUntil)
             {
-                this._ticksLeft = 4;                       // dokoncz reakcje na dotyk
+                this._ticksLeft = 4;                       // finish the touch reaction
                 return;
             }
             if (ClaudeAnimation.TryGetValue(this._claude, out var anim))
@@ -244,9 +244,9 @@ namespace Loupedeck.ClaudeMascotPlugin
             this._ticksLeft = ticks;
         }
 
-        // --- sesje Claude Code -----------------------------------------------------------------------
-        // Kazdy plik to ostatnie zdarzenie jednej sesji; stany krotkotrwale wygasaja, "working" po 10 min
-        // bez zdarzen (np. Ctrl+C bez Stop), pliki starsze niz doba sa sprzatane.
+        // --- Claude Code sessions--------------------------------------------------------------------
+        // Each file holds the last event of one session; short-lived states expire, "working" expires after 10 min
+        // without events (e.g. Ctrl+C without Stop), and files older than a day are cleaned up.
         private void ReadSessions()
         {
             String best = "idle";
@@ -302,7 +302,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             }
             catch (Exception)
             {
-                // katalog chwilowo niedostepny: zostaw poprzedni stan
+                // directory temporarily unavailable: keep the previous state
                 return;
             }
             this._claude = best;
@@ -330,7 +330,7 @@ namespace Loupedeck.ClaudeMascotPlugin
                 bb.DrawImage(frames[this._frame % frames.Length], dx, 0, BitmapRotation.None);
                 if (this._hunger > 85 && this._state != "eat" && this._frame % 8 < 4)
                 {
-                    // pusty brzuszek: migajacy czerwony punkcik nad glowa
+                    // empty tummy: blinking red dot above the head
                     bb.FillRectangle(114 + dx, 40, 12, 12, new BitmapColor(232, 64, 64));
                 }
                 this.DrawSessionDots(bb);
@@ -338,7 +338,7 @@ namespace Loupedeck.ClaudeMascotPlugin
             }
         }
 
-        // Kropki na dole ekranu: zolte (migaja) = sesje czekajace na Ciebie, pomaranczowe = sesje w pracy.
+        // Dots at the bottom: yellow (blinking) = sessions waiting for you, orange = sessions at work.
         private void DrawSessionDots(BitmapBuilder bb)
         {
             var total = Math.Min(8, this._waiting + this._working);

@@ -1,9 +1,9 @@
-"""Dodaje (albo usuwa) hooki maskotki w ~/.claude/settings.json. Idempotentne, z backupem.
+"""Adds (or removes) the mascot hooks in ~/.claude/settings.json. Idempotent, with a backup.
 
-Uzycie:  python install_hooks.py            # instaluje / aktualizuje
-         python install_hooks.py --remove   # usuwa tylko nasze wpisy
-Hooki sa asynchroniczne i uruchamiane bez powloki (command + args), wiec nie spowalniaja Claude Code.
-Interpreter: ten sam python, ktorym uruchomiono instalator (sys.executable).
+Usage:  python install_hooks.py            # install / update
+        python install_hooks.py --remove   # remove only our entries
+The hooks are async and run without a shell (command + args), so they do not slow Claude Code down.
+Interpreter: the same python that runs this installer (sys.executable).
 """
 import json
 import os

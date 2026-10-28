@@ -2,7 +2,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 {
     using System;
 
-    // Loader Logi Plugin Service wymaga klasy ClientApplication takze w uniwersalnych wtyczkach.
+    // The Logi Plugin Service loader requires a ClientApplication class, even in universal plugins.
     public class ClaudeMascotApplication : ClientApplication
     {
         protected override String GetProcessName() => "";

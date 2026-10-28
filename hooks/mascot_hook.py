@@ -1,11 +1,11 @@
-"""Claude Code hook -> stan sesji dla maskotki na Loupedecku.
+"""Claude Code hook -> session state for the Loupedeck mascot.
 
-Wywolywany (async, bez powloki) na kazde zdarzenie Claude Code:
-    <python> mascot_hook.py <EventName>   + JSON zdarzenia na stdin
-Zapisuje ~/.config/loupedeck-cc/sessions/<session_id>.json:
+Runs (async, without a shell) on every Claude Code event:
+    <python> mascot_hook.py <EventName>   + the event JSON on stdin
+Writes ~/.config/loupedeck-cc/sessions/<session_id>.json:
     {"event", "state", "tool", "cwd", "ts", "detail"}
-Wtyczka ClaudeMascot sklada stany wszystkich sesji (priorytet: attention > oops > compact > working > done > hello).
-Skrypt nie moze nigdy przeszkodzic Claude Code: zadnych wyjatkow, zawsze exit 0, tylko biblioteka standardowa.
+The ClaudeMascot plugin combines all sessions (priority: attention > oops > compact > done > hello > working).
+The script must never get in Claude Code's way: no exceptions, always exit 0, standard library only.
 """
 import json
 import os

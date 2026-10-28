@@ -2,7 +2,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 {
     using System;
 
-    // Uniwersalna wtyczka (bez aplikacji docelowej): maskotka-tamagotchi na kole Loupedeck CT.
+    // Universal plugin (no target application): the tamagotchi mascot on the Loupedeck CT wheel.
     public class ClaudeMascotPlugin : Plugin
     {
         public override Boolean UsesApplicationApiOnly => true;
@@ -13,7 +13,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 
         public override void Load()
         {
-            // klatki sa wbudowane w DLL (host laduje wtyczke z pamieci, Assembly.Location jest puste)
+            // frames are embedded in the DLL (the host loads plugins from memory, so Assembly.Location is empty)
             Mascot = new Mascot(typeof(ClaudeMascotPlugin).Assembly);
             Mascot.Start();
         }

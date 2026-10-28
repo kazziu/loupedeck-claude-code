@@ -1,8 +1,8 @@
-"""Buduje paczke wtyczki ClaudeMascot (tamagotchi na kole CT).
+"""Builds the ClaudeMascot plugin package (the tamagotchi on the CT wheel).
 
-Uzycie: python build_plugin.py --out ~/.config/loupedeck-cc/build-plugin
-Wynik: <out>/ClaudeMascot/{metadata/, win/ClaudeMascotPlugin.dll, frames/*.png}
-Wymaga .NET SDK w wersji zgodnej z hostem (Logi Plugin Service 6.4 = .NET 10).
+Usage:  python build_plugin.py --out ~/.config/loupedeck-cc/build-plugin
+Output: <out>/ClaudeMascot/{metadata/, win/ClaudeMascotPlugin.dll}; the wheel frames are embedded in the DLL.
+Needs a .NET SDK matching the host (Logi Plugin Service 6.4 = .NET 10).
 """
 import argparse, os, shutil, subprocess, sys
 
@@ -19,7 +19,7 @@ def main():
     shutil.rmtree(pkg, ignore_errors=True)
     os.makedirs(os.path.join(pkg, "metadata"))
 
-    frames = os.path.join(HERE, "plugin", "frames")  # wbudowywane w DLL jako EmbeddedResource
+    frames = os.path.join(HERE, "plugin", "frames")  # embedded in the DLL as EmbeddedResource
     shutil.rmtree(frames, ignore_errors=True)
     pixelart.export_wheel(frames)
 

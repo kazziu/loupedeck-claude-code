@@ -1,7 +1,7 @@
-# Instaluje wygenerowany profil (i opcjonalnie wtyczke ClaudeMascot) w Logi Plugin Service na Windows.
-# Uzycie: powershell -File install_win.ps1 -Build <katalog build-win> [-Plugin <katalog ClaudeMascot>] [-MakeDefault]
-#   -MakeDefault: kopiuje <Build>\default\<GUID> do @_defaultwin i ustawia go jako domyslny profil CT
-#                 (stary domyslny profil zostaje, mozna do niego wrocic w aplikacji Loupedeck).
+# Installs the generated profile (and optionally the ClaudeMascot plugin) into Logi Plugin Service on Windows.
+# Usage: powershell -File install_win.ps1 -Build <build-win dir> [-Plugin <ClaudeMascot dir>] [-MakeDefault]
+#   -MakeDefault: copies <Build>\default\<GUID> to @_defaultwin and makes it the CT default profile
+#                 (the previous default profile is kept; pick it again in the Loupedeck app to go back).
 param([Parameter(Mandatory)] [string]$Build, [string]$Plugin, [switch]$MakeDefault)
 $ErrorActionPreference = "Stop"
 $lps = "$env:LOCALAPPDATA\Logi\LogiPluginService"
