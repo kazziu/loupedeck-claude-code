@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Wtyczka Logi Plugin Service 6.x (host dziala na .NET 10). Buduj: dotnet build -c Release -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Loupedeck.ClaudeMascotPlugin</RootNamespace>
+    <AssemblyName>ClaudeMascotPlugin</AssemblyName>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <PluginApiDir Condition="'$(OS)' == 'Windows_NT'">C:\Program Files\Logi\LogiPluginService</PluginApiDir>
+    <PluginApiDir Condition="'$(OS)' != 'Windows_NT'">/Applications/Utilities/LogiPluginService.app/Contents/MonoBundle</PluginApiDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- klatki generuje build_plugin.py (art/pixelart.py) przed kompilacja -->
+    <EmbeddedResource Include="frames\*" LogicalName="frames.%(Filename)%(Extension)" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="PluginApi">
+      <HintPath>$(PluginApiDir)\PluginApi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+</Project>
