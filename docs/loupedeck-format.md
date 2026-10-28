@@ -6,13 +6,13 @@ reflection over the service's own assemblies. Nothing here is official. It worke
 
 ## Where things live
 
-| | Windows | macOS (unverified) |
+| | Windows | macOS |
 |---|---|---|
 | Profiles | `%LOCALAPPDATA%\Logi\LogiPluginService\Applications\<Device>\<app>\Profiles\<GUID>\` | `~/Library/Application Support/Logi/LogiPluginService/Applications/...` |
-| Plugins | `%LOCALAPPDATA%\Logi\LogiPluginService\Plugins\<Name>\` | same tree |
-| Plugin logs | `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\<Name>.log`, `_errors.log` | |
-| Settings | `%LOCALAPPDATA%\Logi\LogiPluginService\LoupedeckSettings.ini` (written on exit; *"Don't modify while running"*) | |
-| Service | `C:\Program Files\Logi\LogiPluginService\LogiPluginService.exe` (.NET **10**) | |
+| Plugins | `%LOCALAPPDATA%\Logi\LogiPluginService\Plugins\<Name>\` | `~/Library/Application Support/Logi/LogiPluginService/Plugins/<Name>/` (DLL in `mac/`) |
+| Plugin logs | `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\<Name>.log`, `_errors.log` | `.../LogiPluginService/Logs/plugin_logs/` |
+| Settings | `%LOCALAPPDATA%\Logi\LogiPluginService\LoupedeckSettings.ini` (written on exit; *"Don't modify while running"*) | `.../LogiPluginService/LoupedeckSettings.ini` |
+| Service | `C:\Program Files\Logi\LogiPluginService\LogiPluginService.exe` (.NET **10**) | `/Applications/Utilities/LogiPluginService.app`, started by launch agent `com.logi.pluginservice.launch` |
 
 The old Loupedeck 5 path `%LOCALAPPDATA%\Loupedeck\Applications\...` is gone.
 

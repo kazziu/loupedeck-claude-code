@@ -17,7 +17,7 @@ format works and the traps that already cost hours.
 1. OS: `$env:OS` (Windows_NT) or `uname -s` (Darwin).
 2. Loupedeck software (Logi Plugin Service 6.x) installed and running:
    - Windows: `Get-Process LogiPluginService`; data in `%LOCALAPPDATA%\Logi\LogiPluginService\`.
-   - macOS: `pgrep -il LogiPluginService`; data probably in `~/Library/Application Support/Logi/LogiPluginService/`. Verify, then fix this line.
+   - macOS: `pgrep -il LogiPluginService`; data in `~/Library/Application Support/Logi/LogiPluginService/`.
    - Missing → stop and tell the user to install it from logitech.com / loupedeck.com.
 3. Device: Windows `Get-PnpDevice -FriendlyName "*Loupedeck*"`, macOS `system_profiler SPUSBDataType | grep -i loupedeck`.
    The CT is `Loupedeck20`. Check `LastSeenDevice` in `LoupedeckSettings.ini`.
@@ -94,14 +94,20 @@ Logs: `%LOCALAPPDATA%\Logi\LogiPluginService\Logs\plugin_logs\ClaudeMascot.log` 
 - Mascot behaviour: `plugin/Mascot.cs`. Wheel input: `plugin/WheelToolClawd.cs`.
 - The repo is public: github.com/kazziu/loupedeck-claude-code. Commit and push improvements.
 
-## 7. macOS (not tested yet)
+## 7. macOS
 
-- Profiles: confirm the path from step 0. The default app is probably `@_defaultmac`.
-- Write `install_mac.sh` modelled on `install_win.ps1` (`pkill LogiPluginService`, copy, `open -a`).
-- `gen_profile.py --os mac`: take `layoutId` from any `keyboardKey` in an existing Mac profile, and check
-  `processOrBundleName` and the iTerm2 / Ghostty tab shortcuts.
-- Plugin: replace `user32` `mouse_event` / `keybd_event` with CGEvent, build to the `mac` folder
-  (`pluginFolderMac`) and check `PluginApiDir` in the csproj.
+Tested on macOS 26 / Logi Plugin Service 6.4.1 / Terminal.app (2026-10-28).
+
+- Data: `~/Library/Application Support/Logi/LogiPluginService/` (`Applications/Loupedeck20/...`, `Plugins/`,
+  `Logs/plugin_logs/`). Service: `/Applications/Utilities/LogiPluginService.app`, launch agent
+  `~/Library/LaunchAgents/com.logi.pluginservice.launch.plist`.
+- No .NET SDK? `brew install --cask dotnet-sdk` needs sudo; `dotnet-install.sh --channel 10.0 --install-dir ~/.dotnet`
+  does not (then `export PATH=~/.dotnet:$PATH DOTNET_ROOT=~/.dotnet`).
+- `gen_profile.py --os mac --terminal terminal|iterm2|ghostty` (pick the terminal from step 0), then
+  `./install_mac.sh -b $C/build-mac -p $C/build-plugin/ClaudeMascot -d`.
+- The installer restarts the service through its launch agent. Started from a shell (`open` / exec) the service
+  shows the profile but ignores all input.
+- Still Windows-only: `TerminalSessions.cs` (separate windows); on macOS the round buttons send `⌘1..8`.
 
 ## 8. Fallback
 

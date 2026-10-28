@@ -1,7 +1,7 @@
 """Builds the ClaudeMascot plugin package (the tamagotchi on the CT wheel).
 
 Usage:  python build_plugin.py --out ~/.config/loupedeck-cc/build-plugin
-Output: <out>/ClaudeMascot/{metadata/, win/ClaudeMascotPlugin.dll}; the wheel frames are embedded in the DLL.
+Output: <out>/ClaudeMascot/{metadata/, win/ + mac/ClaudeMascotPlugin.dll}; the wheel frames are embedded in the DLL.
 Needs a .NET SDK matching the host (Logi Plugin Service 6.4 = .NET 10).
 """
 import argparse, os, shutil, subprocess, sys
@@ -27,8 +27,9 @@ def main():
     subprocess.run(["dotnet", "build", os.path.join(HERE, "plugin", "ClaudeMascotPlugin.csproj"), "-c", "Release",
                     "-o", binout, "-v", "q", "-nologo"], check=True,
                    env={**os.environ, "DOTNET_CLI_TELEMETRY_OPTOUT": "1", "DOTNET_NOLOGO": "1"})
-    os.makedirs(os.path.join(pkg, "win"))
-    shutil.copy(os.path.join(binout, "ClaudeMascotPlugin.dll"), os.path.join(pkg, "win"))
+    for folder in ("win", "mac"):  # one IL assembly for both; native calls are picked at runtime (NativeInput.cs)
+        os.makedirs(os.path.join(pkg, folder))
+        shutil.copy(os.path.join(binout, "ClaudeMascotPlugin.dll"), os.path.join(pkg, folder))
 
     shutil.copy(os.path.join(HERE, "plugin", "LoupedeckPackage.yaml"), os.path.join(pkg, "metadata"))
     icon = pixelart.wheel_frame("happy", 3).image(5, bg=(0, 0, 0, 255)).resize((256, 256), pixelart.Image.NEAREST)

@@ -1,8 +1,8 @@
 """Generates the Loupedeck CT "Claude Code" profile for Logi Plugin Service 6.x.
 
 Usage:
-  python gen_profile.py --os win --out <dir> [--prompts prompts.txt] [--lang en|de|pl] [--wheel-plugin]
-                        [--target app|default]
+  python gen_profile.py --os win|mac --out <dir> [--prompts prompts.txt] [--lang en|de|pl] [--wheel-plugin]
+                        [--target app|default] [--terminal terminal|iterm2|ghostty]
 
 Writes to <out>:
   app/ApplicationInfo.json + app/Profiles/<GUID>/{ProfileInfo.json, ActionIcons/*.ict}
@@ -13,6 +13,7 @@ Writes to <out>:
 All ids are deterministic (uuid5), so re-running overwrites the same profile.
 --wheel-plugin: the big wheel shows the ClaudeMascot tamagotchi (the plugin must be installed).
 --lang: tile captions; default = "lang" from ~/.config/loupedeck-cc/config.json, else "en".
+--terminal (macOS): which terminal app the profile follows; all three use Cmd+1..8 and Cmd+Shift+[ / ].
 """
 import argparse, base64, json, os, sys, uuid, zipfile, datetime
 
@@ -32,6 +33,14 @@ LABELS = {
            "clear_line": "Skasuj\nlinię", "page1": "Claude Code", "page2": "Prompty"},
 }
 CONFIG = os.path.join(os.path.expanduser("~"), ".config", "loupedeck-cc", "config.json")
+
+
+# macOS terminals: (app folder name, display name, bundle id)
+MAC_TERMINALS = {"terminal": ("terminal", "Terminal", "com.apple.Terminal"),
+                 "iterm2": ("iterm2", "iTerm2", "com.googlecode.iterm2"),
+                 "ghostty": ("ghostty", "Ghostty", "com.mitchellh.ghostty")}
+# keyboardLayoutId in Mac profiles written by the Loupedeck app (read from an existing @_defaultmac profile)
+MAC_LAYOUT_ID = "1035"
 
 
 def default_lang():
@@ -64,7 +73,8 @@ class Builder:
 
     def key(self, combo):
         parts = combo.split("+")
-        disp = "+".join(DISPLAY.get(p, p[3:] if p.startswith("Key") and len(p) == 4 else p) for p in parts)
+        names = {**DISPLAY, "ControlOrCommand": "Cmd", "AltOrOption": "Opt"} if self.os == "mac" else DISPLAY
+        disp = "+".join(names.get(p, p[3:] if p.startswith("Key") and len(p) == 4 else p) for p in parts)
         return f"{combo}___{self.layout}___{disp}___"
 
     def _cmd(self, owner, i, template, params):
@@ -154,13 +164,13 @@ def load_prompts(path):
     return out[:10]  # tile 11 = git diff, tile 12 = back to page 1
 
 
-def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
+def build(os_name, prompts, wheel_plugin=False, target="app", lang="en", terminal="terminal"):
     global MODE
     L = LABELS.get(lang, LABELS["en"])
     win = os_name == "win"
     default = target == "default"
     MODE = "System" if default else "main"  # the DefaultWin default app uses the "System" mode
-    b = Builder(os_name, "68486165" if win else "0")
+    b = Builder(os_name, "68486165" if win else MAC_LAYOUT_ID)
     CTRL = "Control"            # a real Ctrl (Ctrl+C, Ctrl+U, Ctrl+_) on both systems
     MOD2 = "ControlOrCommand"   # Ctrl on Windows, Cmd on macOS
 
@@ -168,7 +178,7 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
     if win:   # Windows Terminal: default Ctrl+Alt+1..8 = switchToTab index 0..7
         tab = lambda n: f"ControlOrCommand+AltOrOption+Key{n}"
         nxt, prv = "ControlOrCommand+AltOrOption+ArrowRight", "ControlOrCommand+AltOrOption+ArrowLeft"
-    else:     # iTerm2 / Ghostty: Cmd+1..8
+    else:     # Terminal.app / iTerm2 / Ghostty: Cmd+1..8
         tab = lambda n: f"ControlOrCommand+Key{n}"
         nxt, prv = "ControlOrCommand+Shift+Oem6", "ControlOrCommand+Shift+Oem4"
     tab_macros = [b.macro(L["session"].format(n=n), ("key", tab(n)), group="Sessions") for n in range(1, 9)]
@@ -216,7 +226,8 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
                 if wheel_plugin and win else b.dial(L["tabs"], prv, nxt, icon="tabs")),
         encoder(b.macro(L["font_reset"], ("key", f"{MOD2}+Key0")),
                 b.dial(L["font"], f"{MOD2}+Minus", f"{MOD2}+Equals", icon="font")),
-        encoder("$DefaultWin___ResetVolume", "$DefaultWin___Volume") if win else encoder(),
+        encoder("$DefaultWin___ResetVolume", "$DefaultWin___Volume") if win
+        else encoder("$DefaultMac___ResetVolume", "$DefaultMac___Volume"),
         encoder(), encoder(), encoder(),
     ]
 
@@ -249,9 +260,9 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
         prof_name = gid("profile", os_name, "default")
         plugins = ["ClaudeMascot"] if wheel_plugin else []
     else:
-        app = "windowsterminal" if win else "iterm2"
-        prof_name = gid("profile", os_name)
-        plugins = (["DefaultWin"] if win else []) + (["ClaudeMascot"] if wheel_plugin else [])
+        app = "windowsterminal" if win else MAC_TERMINALS[terminal][0]
+        prof_name = gid("profile", os_name) if win else gid("profile", os_name, terminal)
+        plugins = (["DefaultWin"] if win else ["DefaultMac"]) + (["ClaudeMascot"] if wheel_plugin else [])
     profile = {"$type": "Loupedeck.Service.ApplicationProfile, LoupedeckService", "name": prof_name,
         "profileFlags": "None", "displayName": "Claude Code", "description": "Generated by loupedeck-claude-code skill",
         "deviceType": DEVICE, "applicationName": app,
@@ -267,8 +278,9 @@ def build(os_name, prompts, wheel_plugin=False, target="app", lang="en"):
         "profileAdjustments": [], "conversionHistory": "", "packageName": None, "packageVersion": None,
         "profileActions": []}
     appinfo = {"$type": "Loupedeck.Service.SupportedApplicationInfo, LoupedeckService", "name": app,
-        "displayName": "Windows Terminal" if win else "iTerm2", "description": None, "deviceType": DEVICE,
-        "nativePluginName": None, "hasNativePlugin": False, "processOrBundleName": app if win else "com.googlecode.iterm2",
+        "displayName": "Windows Terminal" if win else MAC_TERMINALS[terminal][1], "description": None,
+        "deviceType": DEVICE, "nativePluginName": None, "hasNativePlugin": False,
+        "processOrBundleName": app if win else MAC_TERMINALS[terminal][2],
         "modes": [{"$type": "Loupedeck.Service.ApplicationMode, LoupedeckService", "name": MODE,
                    "parentModeName": None, "displayName": "Main"}],
         "defaultProfileName": prof_name, "isEnabled": True}
@@ -284,8 +296,10 @@ def main():
     ap.add_argument("--wheel-plugin", action="store_true")
     ap.add_argument("--target", choices=["app", "default"], default="app")
     ap.add_argument("--lang", choices=sorted(LABELS), default=default_lang())
+    ap.add_argument("--terminal", choices=sorted(MAC_TERMINALS), default="terminal")
     a = ap.parse_args()
-    app, prof, appinfo, profile, icons = build(a.os, load_prompts(a.prompts), a.wheel_plugin, a.target, a.lang)
+    app, prof, appinfo, profile, icons = build(a.os, load_prompts(a.prompts), a.wheel_plugin, a.target, a.lang,
+                                               a.terminal)
     if a.target == "default":
         pdir = os.path.join(a.out, "default", prof)
         os.makedirs(os.path.join(pdir, "ActionIcons"), exist_ok=True)

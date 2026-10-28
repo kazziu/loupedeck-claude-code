@@ -1,7 +1,6 @@
 namespace Loupedeck.ClaudeMascotPlugin
 {
     using System;
-    using System.Runtime.InteropServices;
 
     using Loupedeck.Devices.Loupedeck2Devices;
 
@@ -13,16 +12,6 @@ namespace Loupedeck.ClaudeMascotPlugin
     //   long press -> Enter (the wheel's old job)
     public class WheelToolClawd : WheelTool
     {
-        private const Int32 MOUSEEVENTF_WHEEL = 0x0800;
-        private const Byte VK_RETURN = 0x0D;
-        private const Int32 KEYEVENTF_KEYUP = 0x0002;
-
-        [DllImport("user32.dll")]
-        private static extern void mouse_event(Int32 flags, Int32 dx, Int32 dy, Int32 data, IntPtr extra);
-
-        [DllImport("user32.dll")]
-        private static extern void keybd_event(Byte vk, Byte scan, Int32 flags, IntPtr extra);
-
         public WheelToolClawd()
             : base("Clawd", "Claude Code")
         {
@@ -72,10 +61,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 
         protected override void OnEncoderEvent(DeviceEncoderEvent encoderEvent)
         {
-            if (OperatingSystem.IsWindows())
-            {
-                mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -encoderEvent.Clicks * 120, IntPtr.Zero);
-            }
+            NativeInput.Scroll(encoderEvent.Clicks);
             ClaudeMascotPlugin.Mascot?.Spin(encoderEvent.Clicks);
         }
 
@@ -90,11 +76,7 @@ namespace Loupedeck.ClaudeMascotPlugin
                     ClaudeMascotPlugin.Mascot?.Party();
                     break;
                 case DeviceTouchEventType.LongPress:
-                    if (OperatingSystem.IsWindows())
-                    {
-                        keybd_event(VK_RETURN, 0, 0, IntPtr.Zero);
-                        keybd_event(VK_RETURN, 0, KEYEVENTF_KEYUP, IntPtr.Zero);
-                    }
+                    NativeInput.Enter();
                     break;
             }
         }

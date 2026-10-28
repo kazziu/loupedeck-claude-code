@@ -63,7 +63,7 @@ Punkte unten auf dem Rad zeigen, wie viele Sitzungen arbeiten (orange) oder auf 
 ## Voraussetzungen
 
 - **Loupedeck CT** und **Logi Plugin Service 6.x** (die aktuelle Loupedeck-Software). Getestet mit 6.4.1 unter Windows 11.
-- **Claude Code** im Windows Terminal (nativ oder WSL). Unter macOS sind iTerm2 / Ghostty vorgesehen, der Mac-Weg ist aber noch nicht getestet (siehe [macOS](#macos)).
+- **Claude Code** im Windows Terminal (nativ oder WSL) oder unter macOS in Terminal.app, iTerm2 oder Ghostty (siehe [macOS](#macos)).
 - **Python 3.9+** mit Pillow (`pip install pillow`) für die Generatoren.
 - **.NET 10 SDK** zum Bauen des Rad-Plugins. Logi Plugin Service 6.4 läuft auf .NET 10, .NET 8 reicht also nicht.
 
@@ -145,10 +145,22 @@ Das Wichtigste:
 
 ## macOS
 
-Der Generator hat einen `mac`-Zweig (`⌘1…8` für iTerm2- / Ghostty-Tabs, `@_defaultmac`), der aber noch
-nicht auf einem Mac getestet wurde. Offen sind: ein `install_mac.sh` nach dem Vorbild von `install_win.ps1`,
-Scrollen per CGEvent im Plugin (heute über `user32`) und das Prüfen der Profil- und SDK-Pfade. Der Skill
-sagt Claude genau, was zu prüfen ist. PRs willkommen.
+Getestet unter macOS 26 (Apple Silicon) mit Logi Plugin Service 6.4.1, einem Loupedeck CT und Terminal.app.
+`gen_profile.py --os mac --terminal terminal|iterm2|ghostty` baut das Profil für dieses Terminal (`⌘1…8` und
+`⌘⇧[` / `⌘⇧]` für Tabs) sowie den `@_defaultmac`-Standard. Installation wie unter Windows:
+
+```bash
+C=~/.config/loupedeck-cc
+python3 build_plugin.py --out $C/build-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin --target default
+./install_mac.sh -b $C/build-mac -p $C/build-plugin/ClaudeMascot -d
+```
+
+Das .NET-10-SDK lässt sich ohne sudo installieren: `dotnet-install.sh --channel 10.0 --install-dir ~/.dotnet`.
+Das Rad scrollt und sendet Enter per CGEvent. Die runden Tasten wechseln Tabs; das Wechseln zwischen separaten
+Fenstern gibt es bisher nur unter Windows. Zeigt das CT das Profil, ignoriert aber alle Tasten, wurde der Dienst
+aus einer Shell gestartet: über seinen Launch Agent neu starten (`install_mac.sh` macht das).
 
 ## Fehlerbehebung
 

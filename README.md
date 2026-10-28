@@ -63,7 +63,7 @@ Dots at the bottom of the wheel show how many sessions are working (orange) or w
 ## Requirements
 
 - **Loupedeck CT** and **Logi Plugin Service 6.x** (the current Loupedeck software). Tested with 6.4.1 on Windows 11.
-- **Claude Code** in Windows Terminal (native or WSL). On macOS it is meant for iTerm2 / Ghostty, but the Mac path is not tested yet (see [macOS](#macos)).
+- **Claude Code** in Windows Terminal (native or WSL), or on macOS in Terminal.app, iTerm2 or Ghostty (see [macOS](#macos)).
 - **Python 3.9+** with Pillow (`pip install pillow`) for the generators.
 - **.NET 10 SDK** to build the wheel plugin. Logi Plugin Service 6.4 runs on .NET 10, so .NET 8 is not enough.
 
@@ -145,10 +145,22 @@ Highlights:
 
 ## macOS
 
-The generator has a `mac` branch (`⌘1…8` for iTerm2 / Ghostty tabs, `@_defaultmac`), but it has not been
-tested on a Mac yet. Still to do: an `install_mac.sh` modelled on `install_win.ps1`, a CGEvent-based scroll
-in the plugin (it uses `user32` today), and checking the profile and SDK paths. The skill tells Claude
-exactly what to check. PRs welcome.
+Tested on macOS 26 (Apple Silicon) with Logi Plugin Service 6.4.1, a Loupedeck CT and Terminal.app.
+`gen_profile.py --os mac --terminal terminal|iterm2|ghostty` builds the profile for that terminal (`⌘1…8` and
+`⌘⇧[` / `⌘⇧]` for tabs) plus the `@_defaultmac` default. Install it the same way as on Windows:
+
+```bash
+C=~/.config/loupedeck-cc
+python3 build_plugin.py --out $C/build-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin --target default
+./install_mac.sh -b $C/build-mac -p $C/build-plugin/ClaudeMascot -d
+```
+
+The .NET 10 SDK installs without sudo with `dotnet-install.sh --channel 10.0 --install-dir ~/.dotnet`.
+The wheel scrolls and sends Enter through CGEvent. Round buttons switch tabs; switching between separate
+windows is still Windows-only. If the CT shows the profile but ignores every button, the service was started
+from a shell: restart it through its launch agent (`install_mac.sh` does this).
 
 ## Troubleshooting
 

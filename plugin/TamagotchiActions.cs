@@ -1,7 +1,6 @@
 namespace Loupedeck.ClaudeMascotPlugin
 {
     using System;
-    using System.Runtime.InteropServices;
 
     // Touching the wheel screen: feed (when hungry), wake up or pet. Can also be placed on a tile.
     public class TamagotchiCommand : PluginDynamicCommand
@@ -42,11 +41,6 @@ namespace Loupedeck.ClaudeMascotPlugin
     // Turning the wheel: scrolls the terminal as usual; spin too fast and the mascot gets dizzy.
     public class TamagotchiScroll : PluginDynamicAdjustment
     {
-        private const Int32 MOUSEEVENTF_WHEEL = 0x0800;
-
-        [DllImport("user32.dll")]
-        private static extern void mouse_event(Int32 flags, Int32 dx, Int32 dy, Int32 data, IntPtr extra);
-
         public TamagotchiScroll()
             : base("Clawd scroll", "Scrolls the terminal; too fast and Clawd gets dizzy", "Clawd", false, DeviceType.All)
         {
@@ -74,10 +68,7 @@ namespace Loupedeck.ClaudeMascotPlugin
 
         protected override void ApplyAdjustment(String actionParameter, Int32 diff)
         {
-            if (OperatingSystem.IsWindows())
-            {
-                mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -diff * 120, IntPtr.Zero);
-            }
+            NativeInput.Scroll(diff);
             ClaudeMascotPlugin.Mascot?.Spin(diff);
         }
 

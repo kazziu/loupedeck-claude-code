@@ -63,7 +63,7 @@ Kropki na dole koła pokazują, ile sesji pracuje (pomarańczowe) albo czeka na 
 ## Wymagania
 
 - **Loupedeck CT** i **Logi Plugin Service 6.x** (aktualne oprogramowanie Loupedecka). Testowane na 6.4.1 i Windows 11.
-- **Claude Code** w Windows Terminal (natywnie albo w WSL). Na macOS docelowo iTerm2 / Ghostty, ale wersja na Maca nie jest jeszcze przetestowana (patrz [macOS](#macos)).
+- **Claude Code** w Windows Terminal (natywnie albo w WSL) albo na macOS w Terminal.app, iTerm2 lub Ghostty (patrz [macOS](#macos)).
 - **Python 3.9+** z Pillow (`pip install pillow`) do generatorów.
 - **.NET 10 SDK** do zbudowania wtyczki koła. Logi Plugin Service 6.4 działa na .NET 10, więc .NET 8 nie wystarczy.
 
@@ -145,10 +145,22 @@ Najważniejsze:
 
 ## macOS
 
-Generator ma gałąź `mac` (`⌘1…8` dla zakładek iTerm2 / Ghostty, `@_defaultmac`), ale nie była jeszcze
-testowana na Macu. Do zrobienia: `install_mac.sh` na wzór `install_win.ps1`, przewijanie przez CGEvent
-we wtyczce (dziś używa `user32`) oraz sprawdzenie ścieżek profili i SDK. Skill mówi Claude'owi
-dokładnie, co sprawdzić. PR mile widziane.
+Przetestowane na macOS 26 (Apple Silicon) z Logi Plugin Service 6.4.1, Loupedeck CT i Terminal.app.
+`gen_profile.py --os mac --terminal terminal|iterm2|ghostty` buduje profil dla wybranego terminala (`⌘1…8`
+oraz `⌘⇧[` / `⌘⇧]` dla zakładek) i domyślny `@_defaultmac`. Instalacja jak na Windows:
+
+```bash
+C=~/.config/loupedeck-cc
+python3 build_plugin.py --out $C/build-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin
+python3 gen_profile.py --os mac --out $C/build-mac --prompts $C/prompts.txt --wheel-plugin --target default
+./install_mac.sh -b $C/build-mac -p $C/build-plugin/ClaudeMascot -d
+```
+
+.NET 10 SDK instaluje się bez sudo: `dotnet-install.sh --channel 10.0 --install-dir ~/.dotnet`.
+Koło przewija i wysyła Enter przez CGEvent. Okrągłe przyciski przełączają zakładki; przełączanie osobnych okien
+działa na razie tylko na Windows. Jeśli CT pokazuje profil, ale ignoruje przyciski, usługa wystartowała z powłoki:
+zrestartuj ją przez jej launch agenta (`install_mac.sh` robi to sam).
 
 ## Problemy
 
