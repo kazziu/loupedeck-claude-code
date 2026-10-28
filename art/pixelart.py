@@ -203,6 +203,8 @@ COOKIE = [".BBB.", "BbBBB", "BBBbB", "BbBBB", ".BBB."]
 LAPTOP = [".dddddddd.", ".duuuuuud.", ".duUuUuud.", ".duuuuuud.", "gggggggggg"]
 GLASSES = ["kkk.kkk", "kUk.kUk", "kkkkkkk"]
 DROP = [".U.", "UUU", ".U."]
+PHONE = ["dddd", "duud", "dUud", "duud", "dddd", "dwdd"]
+WAVES = ["..UUUUU..", ".U.....U.", "U..UUU..U", "..U...U..", "....U...."]
 
 
 def tile(name):
@@ -271,83 +273,94 @@ def tile(name):
     elif name == "font":
         c.sprite(2, 2, FONT_A); c.sprite(12, 4, ["..w.", ".w.w", "wwww", "w..w"])
         mascot(c, 10, 18, eyes="big", mouth="o")
+    elif name == "remote":
+        mascot(c, 8, 18, eyes="happy", arms="right_up", mouth="smile")
+        c.sprite(14, 6, PHONE)
+        c.sprite(11, 0, WAVES)
     return c
 
 
 TILE_NAMES = ["compact", "clear", "model", "resume", "plan", "stop", "kill", "git_status", "git_diff",
-              "new", "continue", "next", "prev", "review", "tests", "explain", "tabs", "font"]
+              "new", "continue", "next", "prev", "review", "tests", "explain", "tabs", "font", "remote"]
 
 
 # --- kolo: tamagotchi -------------------------------------------------------------------------------
-G = 48          # siatka kola
-BY = 38         # linia "podlogi"
+# Siatka 40x40 renderowana x6 = 240 px. Maskotka z rekami ma 32 kratki = 80% szerokosci ekranu.
+G = 40
+CX = 20         # srodek maskotki, wzgledem niego wtyczka przesuwa klatki podczas spaceru
+BY = 30         # dolny wiersz nog
+SCALE = 6
+WALK_X = [17, 23]
+
 
 def wheel_base(c):
-    # ksiezyc/pokoj: delikatna podloga
-    for x in range(6, 42):
+    for x in range(4, 37):
         c.set(x, BY + 1, (60, 44, 40, 255))
-    for x in range(10, 38, 3):
+    for x in range(6, 35, 3):
         c.set(x, BY + 2, (44, 34, 32, 255))
 
 
-def wheel_frame(state, f, x=24, floor=True):
-    """Jedna klatka; state = nazwa zachowania, f = numer klatki, x = pozycja srodka maskotki."""
+def wheel_frame(state, f, x=CX, floor=True):
+    """Jedna klatka; state = nazwa zachowania, f = numer klatki, x = srodek maskotki."""
     c = Canvas(G)
     if floor:
         wheel_base(c)
-    bob = (f // 2) % 2
+    top = BY - BIG.lh - BIG.H + 1          # gorny wiersz tulowia
     if state == "idle":
         eyes = "blink" if f % 16 == 15 else "normal"
         look = [0, 0, 1, 1, 0, 0, -1, -1][(f // 4) % 8]
-        mascot(c, x, BY - bob * 0, BIG, eyes=eyes, look=look)
-        if bob:  # oddech: podniesione ramiona
-            pass
-    elif state == "walk_r" or state == "walk_l":
+        mascot(c, x, BY, BIG, eyes=eyes, look=look)
+    elif state in ("walk_r", "walk_l"):
         d = 1 if state == "walk_r" else -1
         mascot(c, x, BY - (f % 2), BIG, eyes="normal", look=d * 2, step=1 + f % 2)
     elif state == "sleep":
-        m = mascot(c, x, BY, BIG, eyes="sleep", squash=1 if (f // 4) % 2 else 0, mouth="o" if (f // 4) % 2 else None)
+        m = mascot(c, x, BY, BIG, eyes="sleep", squash=1 if (f // 4) % 2 else 0,
+                   mouth="o" if (f // 4) % 2 else None)
         for k in range(3):
             t = (f + k * 5) % 15
-            c.sprite(x + 6 + t // 3 + k * 4, 17 - t, ZZ, k=2 if k == 0 else 1)
+            c.sprite(x + 1 + t // 3 + k * 4, top - 4 - t // 2, ZZ, k=2 if k == 0 else 1)
     elif state == "happy":
-        jump = [0, 3, 6, 7, 6, 3, 0, 0][f % 8]
-        mascot(c, x, BY - jump, BIG, eyes="happy", arms="up" if jump > 2 else "side", mouth="smile", blush=True)
+        jump = [0, 2, 4, 5, 4, 2, 0, 0][f % 8]
+        mascot(c, x, BY - jump, BIG, eyes="happy", arms="up" if jump > 1 else "side", mouth="smile", blush=True)
         for k in range(2):
             t = (f + k * 4) % 8
-            c.sprite(x - 18 + k * 30, 12 - t, HEART, k=2 if k == 0 else 1)
+            c.sprite(x - 11 + k * 17, top - 6 - t // 2, HEART, k=1)
     elif state == "eat":
         chew = f % 4 < 2
-        mascot(c, x - 4, BY, BIG, eyes="happy" if chew else "normal", look=2, mouth="chomp" if chew else "o", arms="right_up")
+        m = mascot(c, x, BY, BIG, eyes="happy" if chew else "normal", mouth="chomp" if chew else "o", arms="up")
         bites = min(3, f // 4)
         ck = [row[:5 - bites] + "." * bites for row in COOKIE]
-        c.sprite(x + 10, BY - 16, ck, k=2)
+        mx, my = m["mouth"]
+        c.sprite(mx + 4, my - 2, ck, k=2)
         for k in range(f % 3):
-            c.set(x + 10 - k * 2, BY - 2 - k, LBROWN)
+            c.set(mx - 2 - k * 2, BY - 1 - k, LBROWN)
     elif state == "dizzy":
         tilt = [-2, -1, 0, 1, 2, 1, 0, -1][f % 8]
         mascot(c, x, BY, BIG, eyes="spiral", mouth="wavy", tilt=tilt)
         for k in range(3):
             a = (f / 8.0) * 2 * math.pi + k * 2 * math.pi / 3
-            c.sprite(x - 2 + round(math.cos(a) * 15), 9 + round(math.sin(a) * 3), STAR)
+            c.sprite(x - 2 + round(math.cos(a) * 11), top - 7 + round(math.sin(a) * 2), STAR)
     elif state == "hungry":
         mascot(c, x, BY, BIG, eyes="sad", mouth="o" if f % 8 < 4 else None, arms="down")
-        c.sprite(x - 1, 4, ["wwwwwwwwwwwww", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "w...........w", "wwwwwwwwwwwww", "...w.........", "..w.........."])
-        c.sprite(x + 1, 5, COOKIE, k=2)
+        c.sprite(x + 2, top - 10, ["wwwwwwwww", "w.......w", "w.......w", "w.......w", "w.......w",
+                                   "w.......w", "wwwwwwwww", "..w......"])
+        c.sprite(x + 4, top - 9, COOKIE)
     elif state == "dance":
         a = ["left_up", "right_up"][(f // 2) % 2]
-        mascot(c, x + [0, 1, 0, -1][f % 4], BY - (f % 2), BIG, eyes="happy", arms=a, mouth="smile", step=1 + (f // 2) % 2)
-        c.sprite(5 + (f % 4), 8 - (f % 3), NOTE, k=2); c.sprite(36 - (f % 4), 6 + (f % 3), NOTE)
+        mascot(c, x + [0, 1, 0, -1][f % 4], BY - (f % 2), BIG, eyes="happy", arms=a, mouth="smile",
+               step=1 + (f // 2) % 2)
+        c.sprite(x - 13 + (f % 3), top - 8 - (f % 3), NOTE)
+        c.sprite(x + 9 - (f % 3), top - 7 + (f % 3), NOTE)
     elif state == "work":
-        m = mascot(c, x, BY, BIG, eyes="normal", look=[1, 2][(f // 3) % 2], arms="down")
+        mascot(c, x, BY, BIG, eyes="normal", look=[1, 2][(f // 3) % 2], arms="down")
         c.sprite(x - 10, BY - 9, LAPTOP, k=2)
-        if f % 2:
-            c.sprite(x + 14, 10 - (f % 6), ["k", "k", "w"][:1] if False else ["w.w", ".w.", "w.w"][: 1 + f % 3])
         for k in range(f % 4):
-            c.set(x - 4 + k * 2, BY - 6, WHITE)
+            c.set(x - 7 + k * 2, BY - 7, WHITE)
+        if f % 2:
+            c.sprite(x + 9, top - 4 - (f % 3), ["w.w", ".w.", "w.w"][: 1 + f % 3])
     elif state == "pet":
         mascot(c, x, BY, BIG, eyes="happy", blush=True, mouth="smile", squash=1 if f % 4 < 2 else 0)
-        c.sprite(x - 5, 6 - (f % 4), HEART, k=2)
+        c.sprite(x - 5, top - 9 - (f % 3), HEART, k=2)
     return c
 
 
@@ -362,12 +375,9 @@ def tile_png(name, scale=6):
     return buf.getvalue()
 
 
-WALK_X = list(range(18, 31))   # zakres chodzenia srodka maskotki po kole
-
-
-def export_wheel(outdir, scale=5):
-    """Klatki kola dla wtyczki: <stan>_<n>.png (240x240, przezroczyste, maskotka na x=24),
-    floor.png (tlo z podloga) i frames.json. Wtyczka sklada: floor + klatka przesunieta o (x-24)*scale."""
+def export_wheel(outdir, scale=SCALE):
+    """Klatki kola dla wtyczki: <stan>_<n>.png (240x240, przezroczyste, maskotka na x=CX),
+    floor.png (tlo z podloga) i frames.json. Wtyczka sklada: floor + klatka przesunieta o (x-CX)*scale."""
     import json, os
     os.makedirs(outdir, exist_ok=True)
     floor = Canvas(G)
@@ -375,8 +385,8 @@ def export_wheel(outdir, scale=5):
     floor.image(scale, bg=(0, 0, 0, 255)).save(os.path.join(outdir, "floor.png"), optimize=True)
     for state, n in WHEEL_STATES.items():
         for f in range(n):
-            wheel_frame(state, f, 24, floor=False).image(scale).save(
+            wheel_frame(state, f, CX, floor=False).image(scale).save(
                 os.path.join(outdir, f"{state}_{f}.png"), optimize=True)
-    json.dump({"states": WHEEL_STATES, "scale": scale, "walk_x": [WALK_X[0], WALK_X[-1]]},
+    json.dump({"states": WHEEL_STATES, "scale": scale, "center": CX, "walk_x": WALK_X},
               open(os.path.join(outdir, "frames.json"), "w"), indent=1)
     return WHEEL_STATES

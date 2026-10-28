@@ -76,12 +76,11 @@ Modyfikatory: Windows = Ctrl/Alt, macOS = ⌘/⌥. Niżej "MOD1" to Alt (Win) / 
 | Kafelek 6 "Stop" | Keyboard Shortcut | `Esc` |
 | Kafelek 7 "Kill" | Keyboard Shortcut | `Ctrl+C` |
 | Kafelek 8 "git status" | Text + Enter | `git status` |
-| Kafelek 9 "git diff" | Text + Enter | `git diff --stat` |
+| Kafelek 9 "Remote" | Text + Enter | `/remote-control` (`git diff` przeniesiony na stronę 2, kafelek 11) |
 | Kafelek 10 "Nowa sesja" | Text + Enter | `claude` |
 | Kafelek 11 "Kontynuuj" | Text + Enter | `claude -c` |
 | Kafelek 12 "Strona 2" | Switch Page | przejście na stronę 2 (własne prompty) |
-| Duże koło – obrót | wtyczka ClaudeMascot `TamagotchiScroll` | scroll historii terminala; za szybko = maskotka ma zawroty głowy |
-| Duże koło – dotyk | wtyczka ClaudeMascot `TamagotchiCommand` | karmienie (gdy głodna) / budzenie / głaskanie |
+| Duże koło | szablon `WheelToolClawd` z wtyczki ClaudeMascot (pełny ekran 240×240) | obrót = scroll terminala (za szybko = zawroty głowy); dotyk = karmienie / budzenie / głaskanie; podwójny dotyk = taniec; przytrzymanie = `Enter` |
 | (bez wtyczki) | Mouse Scroll + Enter | fallback: zegar, obrót = scroll, dotyk = `Enter` |
 | Pokrętło L1 | Keyboard Shortcut ± | `MOD1+n` / `MOD1+p` (tmux) lub next/prev tab |
 | Pokrętło L2 | Keyboard Shortcut ± | `MOD2+=` / `MOD2+-` (rozmiar czcionki) |
@@ -98,11 +97,13 @@ z 3 przykładami (`review`, `tests`, `explain`).
 
 **Grafika (tylko kodem, bez generatorów obrazu):** `art/pixelart.py` rysuje piksel po pikselu maskotkę
 Claude Code. Ikony kafelków i pokręteł (siatka 20×20) trafiają do profilu jako `ActionIcons/<actionId>.ict`
-(PNG w base64 + podpis). Klatki koła (siatka 48×48, 240×240 px, 11 stanów: idle, walk, sleep, happy, eat,
+(PNG w base64 + podpis). Klatki koła (siatka 40×40 ×6 = 240 px, maskotka zajmuje 80% szerokości, 11 stanów: idle, walk, sleep, happy, eat,
 dizzy, hungry, dance, work, pet) są wbudowane w DLL wtyczki. Nowa ikona = funkcja w `tile()` + nazwa
 w `TILE_NAMES`. Podgląd: wyrenderuj `tile(n).image(6)` / `wheel_frame(s, f).image(5)` do PNG i obejrzyj.
 
-**Wtyczka ClaudeMascot (`plugin/`, C#):** tamagotchi na kole. Głód rośnie przez ~45 min, po 3 min bez
+**Wtyczka ClaudeMascot (`plugin/`, C#):** tamagotchi na kole. Pełny ekran koła daje tylko własna klasa
+`WheelTool` (`plugin/WheelToolClawd.cs`), bo usługa rejestruje szablony koła po nazwie klasy, tak jak zegar w DefaultWin.
+Szablon `WheelToolGeneric1x1` pokazuje obraz akcji tylko jako małą ikonę z podpisem. Głód rośnie przez ~45 min, po 3 min bez
 dotyku maskotka zasypia, czasem spaceruje albo tańczy. Gdy plik `~/.config/loupedeck-cc/claude-state`
 zawiera `working` (np. zapisywany przez hooki Claude Code), maskotka pisze na laptopie.
 Host Logi Plugin Service 6.4 działa na **.NET 10**, więc wtyczka wymaga .NET 10 SDK. Loader wymaga

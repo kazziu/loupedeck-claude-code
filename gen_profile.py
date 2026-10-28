@@ -125,7 +125,7 @@ def load_prompts(path):
             parts = [s.strip() for s in line.split("|")]
             icon = parts[2] if len(parts) > 2 and parts[2] in pixelart.TILE_NAMES else "explain"
             out.append((parts[0].replace("\\n", "\n"), parts[1], icon))
-    return out[:11]  # 12. kafelek = powrot na strone 1
+    return out[:10]  # 11. kafelek = git diff, 12. = powrot na strone 1
 
 
 def build(os_name, prompts, wheel_plugin=False, target="app"):
@@ -156,13 +156,15 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
         b.macro("Stop", ("key", "Escape"), icon="stop"),
         b.macro("Kill", ("key", f"{CTRL}+KeyC"), icon="kill"),
         b.text_enter("git\nstatus", "!git status", "git_status"),
-        b.text_enter("git\ndiff", "!git diff --stat", "git_diff"),
+        b.text_enter("Remote", "/remote-control", "remote"),
         b.text_enter("Nowa\nsesja", "claude", "new"),
         b.text_enter("Kontynuuj", "claude -c", "continue"),
         b.icon("$@Generic___@NextTouchPage", "next", "Dalej"),
     ]
     p2 = [b.text_enter(label, text, icon) for label, text, icon in prompts]
-    p2 += [None] * (11 - len(p2)) + [b.icon("$@Generic___@PreviousTouchPage", "prev", "Wstecz")]
+    p2 += [None] * (10 - len(p2))
+    p2 += [b.text_enter("git\ndiff", "!git diff --stat", "git_diff"),
+           b.icon("$@Generic___@PreviousTouchPage", "prev", "Wstecz")]
 
     # Kwadratowe (indeksy jak w fabrycznych profilach CT): 1 Undo, 3 Enter, 4 Save, 6/7/9/10 strzalki, 11 wolny
     sq = [button() for _ in range(12)]
@@ -183,10 +185,8 @@ def build(os_name, prompts, wheel_plugin=False, target="app"):
         encoder(), encoder(), encoder(),
     ]
 
-    if wheel_plugin:  # wtyczka ClaudeMascot: dotyk = poglaskanie/karmienie, obrot = scroll + zawroty glowy
-        wheel = {"templateName": "WheelToolGeneric1x1",
-                 "actions": "$ClaudeMascot___Loupedeck.ClaudeMascotPlugin.TamagotchiCommand",
-                 "adjustment": "$ClaudeMascot___Loupedeck.ClaudeMascotPlugin.TamagotchiScroll"}
+    if wheel_plugin:  # WheelToolClawd z wtyczki ClaudeMascot: pelny ekran, sam obsluguje dotyk i obrot
+        wheel = {"templateName": "WheelToolClawd", "actions": "", "adjustment": ""}
     else:
         wheel = {"templateName": "WheelToolAnalogClock", "actions": enter, "adjustment": "$@Generic___@MouseWheel"}
 

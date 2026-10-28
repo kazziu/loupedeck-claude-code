@@ -19,11 +19,11 @@ namespace Loupedeck.ClaudeMascotPlugin
         private readonly Dictionary<String, BitmapImage[]> _frames = new();
         private readonly String _stateFile;
         private BitmapImage _floor;
-        private Int32 _scale = 5, _minX = 18, _maxX = 30;
+        private Int32 _scale = 6, _center = 20, _minX = 17, _maxX = 23;
         private Timer _timer;
 
         private String _state = "idle";
-        private Int32 _frame, _ticksLeft, _x = 24, _targetX = 24;
+        private Int32 _frame, _ticksLeft, _x = 20, _targetX = 20;
         private Double _hunger = 20, _spin;
         private DateTime _lastTouch = DateTime.Now;
         private Boolean _claudeWorking;
@@ -47,6 +47,7 @@ namespace Loupedeck.ClaudeMascotPlugin
                 using var doc = JsonDocument.Parse(Res("frames.json"));
                 var root = doc.RootElement;
                 this._scale = root.GetProperty("scale").GetInt32();
+                this._center = this._x = this._targetX = root.GetProperty("center").GetInt32();
                 this._minX = root.GetProperty("walk_x")[0].GetInt32();
                 this._maxX = root.GetProperty("walk_x")[1].GetInt32();
                 foreach (var st in root.GetProperty("states").EnumerateObject())
@@ -89,6 +90,16 @@ namespace Loupedeck.ClaudeMascotPlugin
                 {
                     this.Set(this._rnd.Next(2) == 0 ? "pet" : "happy", 16);
                 }
+            }
+            this.Changed?.Invoke();
+        }
+
+        public void Party()
+        {
+            lock (this._lock)
+            {
+                this._lastTouch = DateTime.Now;
+                this.Set("dance", 40);
             }
             this.Changed?.Invoke();
         }
@@ -220,13 +231,14 @@ namespace Loupedeck.ClaudeMascotPlugin
                 {
                     bb.DrawImage(this._floor, 0, 0, BitmapRotation.None);
                 }
-                bb.DrawImage(frames[this._frame % frames.Length], (this._x - 24) * this._scale, 0, BitmapRotation.None);
+                var dx = (this._x - this._center) * this._scale;
+                bb.DrawImage(frames[this._frame % frames.Length], dx, 0, BitmapRotation.None);
                 if (this._hunger > 85 && this._state != "eat")
                 {
                     // pusty brzuszek: migajacy czerwony punkcik nad glowa
                     if (this._frame % 8 < 4)
                     {
-                        bb.FillRectangle(115 + (this._x - 24) * this._scale, 60, 10, 10, new BitmapColor(232, 64, 64));
+                        bb.FillRectangle(114 + dx, 40, 12, 12, new BitmapColor(232, 64, 64));
                     }
                 }
                 return bb.ToImage();
